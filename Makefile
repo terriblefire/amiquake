@@ -13,8 +13,8 @@ NDK_INC ?= /opt/amiga/m68k-amigaos/ndk-include
 
 # Compiler flags
 ARCH_FLAGS = -m68040 -m68881
-OPT_FLAGS = -O2 -fno-strict-aliasing
-# NOTE: mathlib.c compiled with -O1 due to GCC FP optimizer bugs
+OPT_FLAGS = -O1 -fno-strict-aliasing
+# NOTE: Using -O1 globally due to GCC optimizer bugs (culling, FP math)
 # NOTE: cvar.c contains workaround for AmigaOS sprintf lacking %f support
 WARN_FLAGS = -Wall -Wno-unused
 DEFINES = -DAMIGA -DFALSE=0 -DTRUE=1
@@ -149,9 +149,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.s
 $(OBJDIR)/net_amigaudp.o: $(SRCDIR)/net_amigaudp.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-# Special rule for mathlib.c (compile with -O1 to avoid FP optimizer bugs)
-$(OBJDIR)/mathlib.o: $(SRCDIR)/mathlib.c
-	$(CC) $(ARCH_FLAGS) -O1 -fno-strict-aliasing $(WARN_FLAGS) $(DEFINES) $(INCLUDES) -c -o $@ $<
+# mathlib.c uses default -O1 flags (no special rule needed)
 
 # Clean
 clean:
