@@ -3,10 +3,13 @@
 # Target: 68060 with FPU
 
 # Toolchain
-CC = /opt/amiga/bin/m68k-amigaos-gcc
-AS = /opt/amiga/bin/vasmm68k_mot
-AR = /opt/amiga/bin/m68k-amigaos-ar
-RANLIB = /opt/amiga/bin/m68k-amigaos-ranlib
+CC = m68k-amigaos-gcc
+AS = vasmm68k_mot
+AR = m68k-amigaos-ar
+RANLIB = m68k-amigaos-ranlib
+
+# NDK includes (can be overridden)
+NDK_INC ?= /opt/amiga/m68k-amigaos/ndk-include
 
 # Compiler flags
 ARCH_FLAGS = -m68040 -m68881
@@ -139,7 +142,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 
 # Assemble .s files (using 68040 for C2P compatibility)
 $(OBJDIR)/%.o: $(SRCDIR)/%.s
-	$(AS) -Fhunk -m68040 -quiet -I/opt/amiga/m68k-amigaos/ndk-include -I/opt/amiga/m68k-amigaos/ndk-include/lvo -o $@ $<
+	$(AS) -Fhunk -m68040 -quiet -I$(NDK_INC) -I$(NDK_INC)/lvo -o $@ $<
 
 # Special rule for net_amigaudp.c (needs additional include path)
 $(OBJDIR)/net_amigaudp.o: $(SRCDIR)/net_amigaudp.c
