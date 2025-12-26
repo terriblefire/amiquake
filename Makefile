@@ -14,7 +14,7 @@ NDK_INC ?= /opt/amiga/m68k-amigaos/ndk-include
 # Compiler flags
 ARCH_FLAGS = -m68040 -m68881
 OPT_FLAGS = -O2 -fno-strict-aliasing
-# NOTE: mathlib.c compiled with -O0 due to GCC FP optimizer bugs
+# NOTE: mathlib.c and in_amiga.c compiled with -O1 due to GCC FP optimizer bugs
 WARN_FLAGS = -Wall -Wno-unused
 DEFINES = -DAMIGA -DFALSE=0 -DTRUE=1
 # Note: id68k=1 not defined - using C implementations instead of SAS/C assembly
@@ -148,8 +148,11 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.s
 $(OBJDIR)/net_amigaudp.o: $(SRCDIR)/net_amigaudp.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-# Special rule for mathlib.c (compile with -O1 to avoid FP optimizer bugs)
+# Special rules for files with FP math (compile with -O1 to avoid FP optimizer bugs)
 $(OBJDIR)/mathlib.o: $(SRCDIR)/mathlib.c
+	$(CC) $(ARCH_FLAGS) -O1 -fno-strict-aliasing $(WARN_FLAGS) $(DEFINES) $(INCLUDES) -c -o $@ $<
+
+$(OBJDIR)/in_amiga.o: $(SRCDIR)/in_amiga.c
 	$(CC) $(ARCH_FLAGS) -O1 -fno-strict-aliasing $(WARN_FLAGS) $(DEFINES) $(INCLUDES) -c -o $@ $<
 
 # Clean

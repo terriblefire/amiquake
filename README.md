@@ -235,7 +235,24 @@ $(OBJDIR)/mathlib.o: $(SRCDIR)/mathlib.c
   // After:  right[0] = -sr*sp*cy + cr*sy;
   ```
 
-### 3. C2P Addressing Mode
+### 3. Mouse Movement Broken
+
+**Problem:** Mouse movement would become erratic or stop working completely, especially horizontal (right) movement.
+
+**Cause:** GCC's `-O2` floating-point optimizer was miscompiling the mouse input calculations in `in_amiga.c`, similar to the angle corruption in `mathlib.c`.
+
+**Solution:** Compile `in_amiga.c` with `-O1` to avoid FP optimizer bugs.
+
+```makefile
+# Special rules for files with FP math (compile with -O1 to avoid FP optimizer bugs)
+$(OBJDIR)/mathlib.o: $(SRCDIR)/mathlib.c
+	$(CC) $(ARCH_FLAGS) -O1 -fno-strict-aliasing $(WARN_FLAGS) $(DEFINES) $(INCLUDES) -c -o $@ $<
+
+$(OBJDIR)/in_amiga.o: $(SRCDIR)/in_amiga.c
+	$(CC) $(ARCH_FLAGS) -O1 -fno-strict-aliasing $(WARN_FLAGS) $(DEFINES) $(INCLUDES) -c -o $@ $<
+```
+
+### 4. C2P Addressing Mode
 
 **Problem:** Initial C2P implementation used 16-bit word patching at wrong offsets.
 
@@ -252,6 +269,7 @@ $(OBJDIR)/mathlib.o: $(SRCDIR)/mathlib.c
 src/
   c2p8.s                - Complete C2P implementation (wrapper + disassembled 842-byte core)
   mathlib.c             - Math library (compiled with -O1)
+  in_amiga.c            - Input handling (compiled with -O1)
   vid_amiga.c           - Video driver
   view.c                - View/angle calculations
 
@@ -265,13 +283,14 @@ Makefile                - Build configuration with selective optimization
 GCC `-O3` enables aggressive optimizations that break floating-point calculations:
 - `-fno-strict-aliasing` alone is insufficient
 - `-ffloat-store` fixes it but kills performance
-- Even `-O2` breaks angle calculations in mathlib.c
+- Even `-O2` breaks angle calculations in mathlib.c and mouse input in in_amiga.c
 
 ### Selective Optimization Strategy
 
 Best performance/correctness balance:
 - **Most code:** `-O2 -fno-strict-aliasing` (~95% of codebase)
-- **mathlib.c:** `-O1 -fno-strict-aliasing` (critical FP math)
+- **mathlib.c:** `-O1 -fno-strict-aliasing` (angle calculations, vector math)
+- **in_amiga.c:** `-O1 -fno-strict-aliasing` (mouse input with FP sensitivity)
 
 This gives ~90% of `-O2` performance with full correctness.
 

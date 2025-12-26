@@ -78,8 +78,8 @@ extern void c2p8(void *c2p __asm("a0"), struct BitMap *bmp __asm("a1"), UBYTE *c
 
 // Mouse globals for NovaCoder's simplified input handling
 // Mouse globals now defined in sys_amiga.c
-extern short int mouseX;
-extern short int mouseY;
+extern int mouseX;
+extern int mouseY;
 extern qboolean mouse_has_moved;
 
 #define	BASEWIDTH	320

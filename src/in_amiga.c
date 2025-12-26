@@ -20,9 +20,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "quakedef.h"
 
-// Mouse globals set by vid_amiga.c
-extern short int mouseX;
-extern short int mouseY;
+// Mouse globals set by sys_amiga.c
+extern int mouseX;
+extern int mouseY;
 extern qboolean mouse_has_moved;
 
 cvar_t	m_filter = {"m_filter","1"};
