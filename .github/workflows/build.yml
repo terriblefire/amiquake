@@ -20,11 +20,21 @@ jobs:
     - name: Build AmiQuake
       run: |
         # Find NDK include path in container
-        export NDK_INC=$(find /opt -name "ndk-include" 2>/dev/null | head -1)
+        export NDK_INC=$(find /opt -path "*/ndk-include" -o -path "*/ndk/include" 2>/dev/null | head -1)
         if [ -z "$NDK_INC" ]; then
-          export NDK_INC=/opt/amiga/m68k-amigaos/ndk-include
+          # Try alternate locations
+          if [ -d "/opt/m68k-amigaos/m68k-amigaos/ndk-include" ]; then
+            export NDK_INC=/opt/m68k-amigaos/m68k-amigaos/ndk-include
+          elif [ -d "/opt/m68k-amigaos/ndk-include" ]; then
+            export NDK_INC=/opt/m68k-amigaos/ndk-include
+          else
+            export NDK_INC=/opt/amiga/m68k-amigaos/ndk-include
+          fi
         fi
         echo "Using NDK_INC=$NDK_INC"
+        ls -la "$NDK_INC" || true
+        # Check for exec/funcdef.i
+        find "$NDK_INC" -name "funcdef.i" || true
         make clean
         make NDK_INC=$NDK_INC
 
