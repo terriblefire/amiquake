@@ -1,0 +1,394 @@
+Short: 68k and PPC ports of winquake, v0.9
+Author: Peter McGavin  (p.mcgavin@irl.cri.nz)
+Type: game/shoot
+Uploader: Peter McGavin  (p.mcgavin@irl.cri.nz)
+Version: 0.9
+
+
+
+                            awinquake 0.9                   12 Mar 2000
+                            -------------
+
+
+This archive contains Amiga 68k and PPC ports of winquake, compiled as
+directly as possible from ID Software's winquake source code.
+
+On 24th Dec 1999 I learnt that ID Software had released the source
+code of winquake, glquake, quakeworld and glquakeworld (on 21st Dec
+1999) under GNU Public License (GPL) and made them available by ftp.
+So I downloaded them and tried compiling winquake with SAS/C 6.58 for
+the Amiga.  This archive represents my results after about 10 evenings
+and 4 days.
+
+winquake is well written and extremely portable, so it didn't take
+long to get it working on my Amiga by cutting and pasting code from
+other projects.  I expect other people are doing better ports, e.g,
+Frank Wille and Steffen Haeuser.  However I hadn't seen any legal ones
+when I started, and as it didn't take very long to get a base version
+running, I thought I'd release what I've done.  If you're doing your
+own port, feel free to take source code from mine, but remember
+there's no guarantee.
+
+Sorry I haven't even looked at the glquake and quakeworld source code
+yet.
+
+You can get all the original ID Software quake source from:
+
+   ftp://ftp.cdrom.com/pub/idgames/idstuff/source/q1source.zip
+
+Source code of awinquake is necessarily in a separate archive on
+Aminet.  The GPL license requires that the source code of all
+modifications to Quake is made freely available.
+
+Thanks to John Selck, Niels Froehling and others for the source code
+they sent me for inclusion in awinquake, and sorry I haven't done very
+much with it yet.
+
+
+
+FEATURES:
+---------
+
+Several versions are provided, all compiled from the same source, but
+with different compilers.  They are:
+
+        awinquake:       SAS/C, 68020+
+        awinquakeppc:    SAS/C+gcc, PPC, PowerUp or WarpOS+ppclibemu
+        awinquakewos:    StormC, PPC, WarpOS
+        awinquakevbcc:   vbcc, PPC, WarpOS
+
+Also, Jarmo Laakkonen compiled awinquake with EGCS for WarpOS and
+uploaded his version to Aminet as game/shoot/WarpQuake.lha.
+
+All versions are OS-friendly and multitask.
+
+All versions put up an ASL requester for the ScreenMode.
+
+PPC versions use Joseph Fenton's PPC c2p routine from ADoomPPC and
+triple buffering in AGA modes.  68k version uses Aki Laukkanen's c2p
+routine in AGA modes.
+
+Stereo sound effects are included using either audio.device or AHI.
+Also CD audio for music works if you use ClickBoom's AmigaQuake CDROM.
+You need cdplayer.library (from Aminet) for this.
+
+Networking for TCP/IP is included.
+
+awinquakeppc is mostly compiled with SAS/C scppc.  However, the
+innermost rendering routines are compiled with ppc-amigaos-gcc.  This
+results in a small speedup (about 3%) over compiling everything with
+scppc.
+
+My modified source code should still compile for Linux (APUS),
+Solaris, Win95, etc, with no changes --- untested.
+
+Speeds up to 42.2 fps have been observed for "timedemo demo2" in
+320x200 on a 233 MHz PPC Amiga 3000 with CyberVisionPPC.
+
+I added a -fps option, but see the note below about bus speed before
+you believe the numbers you see.
+
+
+
+LIMITATIONS:
+------------
+
+My 68k version is much slower than ClickBoom's commercial version.  I
+use my 68k version primarily for debugging.  In fact I don't recommend
+the 68k version at all.  Buy Clickboom's version.
+
+No joystick yet, sorry.
+
+Untested code.  Your mileage may vary.
+
+
+
+REQUIREMENTS:
+-------------
+
+A 68020+ Amiga running at least Kickstart 3.0, with at least about 16
+Mb of fastmem.
+
+An FPU is required.
+
+You need either a gfx-card or AGA.  ECS alone is not sufficient.
+
+A TCP/IP stack is required for networking, e.g, AmiTCP or Miami.
+An ethernet card is strongly recommended.
+
+I use a stack size of 500000 bytes.  I'm not sure what the minimum
+stack size is.  150000 bytes is definitely too small.
+
+An MMU is neither required nor used.
+
+You need the Quake 1 PAK files and other support files from either a
+commercial or shareware version of Quake.  Assuming you've already
+installed AmigaQuake or a PC version, put awinquake or awinquakeppc in
+the same directory as the original quake executable.
+
+For CD audio, you need cdplayer.library from Aminet and an original
+Quake CDROM.  The game searches for Clickboom's CDROM --- volume name
+"QUAKE".  If your CDROM is labelled differently, you can use the
+environment variables quake/scsi_device and quake/scsi_unit instead.
+For example:
+
+        setenv quake/scsi_device z3scsi.device
+        setenv quake/scsi_unit   5
+
+
+
+MOUSE AND JOYPAD:
+-----------------
+
+To enable mouse control, use -mouse.  To leave the mouse pointer
+visible, use -mousepointer.
+
+To enable CD32 joypad control, use -joypad.  You must have
+lowlevel.library for this.  You need to bind the buttons yourself.
+The buttons are located in AUX1 - AUX11.
+
+AUX1  = left
+AUX2  = right
+AUX3  = up
+AUX4  = down
+AUX5  = red
+AUX6  = green
+AUX7  = yellow
+AUX8  = blue
+AUX9  = play
+AUX10 = forward
+AUX11 = reverse
+
+Binding example: In Quake console type, BIND AUX5 "+ATTACK".
+
+Thanks to Jarmo Laakkonen for writing the joypad code.
+
+
+
+AHI:
+----
+
+To enable AHI audio, use -ahi, otherwise awinquake uses two 8-bit
+audio.device channels by default.  You must also have ahi.library
+installed for AHI.  With -ahi, awinquake sends a 16-bit stereo audio
+stream to AHI unit 0.
+
+Use AHI prefs to select the AHI driver for unit 0.  If you installed
+AHI properly, you can enter "AHI" at a CLI prompt to start AHI prefs.
+
+Unfortunately AHI slows down awinquake quite a lot, especially with
+the HiFi stereo++ AHI drivers.
+
+
+
+KNOWN BUGS, PROBLEMS AND SOLUTIONS:
+-----------------------------------
+
+If you get the message "file is not executable" when you start
+awinquakeppc, try using runelf, or run another program that uses
+ppc.library first.  Also, make sure the executable bit is set in the
+file protection mask of awinquakeppc.  If that still fails, try a more
+recent version of ppc.library, or use WarpOS + ppclibemu.
+
+Random crashes, especially crashes on exit, may be caused by stack too
+small.  Set a large stack, say 500000 bytes, especially if networking.
+Use the AmigaOS STACK command to set the stack size before you start
+awinquake or awinquakeppc.
+
+The most buggy version is awinquakevbcc.  I suggest using awinquakeppc,
+awinquakewos or Jarmo Laakkonen's WarpQuake instead.
+
+There is a -mem option for allocating a different size heap than the
+default.  For example, "awinquakeppc -mem 24" starts awinquake with a
+24 Megabyte heap.  The default size is 8 Megabytes.  Some Quake
+add-ons, such as Malice, require a larger heap.  Also, a larger heap
+size reduces disk accesses.  If you are very short of memory, try a
+smaller heap, e.g, "awinquakeppc -mem 6".
+
+The game may "stick" for a few seconds every few minutes when the
+cdplayer loops.  Sorry, no solution for this yet except -nocdaudio.
+
+If the game reports the wrong bus speed at the start, as could happen
+with WarpOS+ppclibemu, then the game will run at the wrong speed and
+audio may sound broken up.  Furthermore, all reported times and fps
+ratings (e.g, for timedemo demo2) will be wrong.  Override with, e.g
+(for 66 MHz bus)
+
+        awinquakeppc -bus 66666667
+
+If the game takes too long to load, try using the AmigaOS ADDBUFFERS
+command.  I'm told that changing from FFS to PFS3 is an even faster
+alternative.
+
+The TCP/IP networking code seems to be rather flaky.  I successfully
+used it over ethernet with other Amigas running awinquakeppc, other
+Amigas running Clickboom's Quake and other PCs running Quake 1.06.
+(awinquake is a port of winquake 1.09.)  However, sometimes the server
+wasn't seen by the client looking for it.  In that case the solution
+is to type in the IP number of the server.  Sometimes I wasn't able to
+make a connection at all, or when I made a connection, the players
+couldn't move.  Then, when I tried again later, it worked just fine.
+
+
+
+SPEED:
+------
+
+On my A3000 + 233MHz PPC + CVisionPPC, the fastest combination is
+awinquakeppc with PowerUP.  That's mainly because only awinquakeppc
+has some hand-optimised assembly code.  The fastest version with
+WarpOS is also awinquakeppc, but you need Frank Wille's ppclibemu for
+that.  Jarmo Laakkonen's WarpQuake + WarpOS is nearly as fast with
+-wpa8.  WarpQuake's chunkyppc.library support is slower than WarpQuake
+-wpa8 on my system.
+
+
+
+ANOTHER QUAKE PORT:
+-------------------
+
+Another excellent Quake port by Steffen Haeuser, Frank Wille and
+others is available from http://devnull.owl.de/~frank/quake_e.html.
+They have also ported QuakeWorld, and there is a beta of GLQuake using
+Warp3D there now too.  Their version is significantly faster than mine
+and has more features.  However the version I tested seemed to have
+more bugs (incorrectly placed weapon trails, problems loading certain
+saved levels, sometimes missing or invisible enemies, etc) and only
+has mono sound, but it's getting better all the time.
+
+
+
+HISTORY:
+--------
+
+v0.9   12 Mar 2000
+
+Calculate perspective every 16 pixels, like the x86 version of Quake,
+instead of every 8 pixels.  That saves a lot of floating-point divides
+and increases the speed of awinquakeppc by nearly 1 fps.
+
+More assembly optimisations for 68k version from John Selck.  68060/50
+"timedemo demo2" speed is up to 9.6 fps.
+
+
+
+v0.8    3 Mar 2000
+
+Implemented -ahi, stereo 16-bit sound.
+
+More changes to PLL code.  Hopefully bus speed detection right for all
+versions of both PowerUP and ppclibemu now.
+
+Used lots of m68k assembly code from John Selck in 680x0 version,
+which is up to 9.2 fps for "timedemo demo2" on 68060/50 now.
+
+Miscellaneous speedup optimisations in all versions.
+
+
+
+v0.7   19 Feb 2000
+
+I introduced a stupid bug in the math routines at the last minute
+before uploading v0.6 that made the player virtually uncontrollable in
+awinquakeppc.  Fixed.
+
+
+
+v0.6   18 Feb 2000
+
+Many ELF loaders couldn't load awinquakeppc v0.5 because various
+global symbols declared in amiga_socket_lib.s and amigacgxtagfns.s had
+no type declared.  Goodness knows why it worked in v0.4 and not in
+v0.5.  Anyway, added ".type symbol,@function" declarations to those
+files and recompiled.  Also added ".size" directives.
+
+Added optimised c2p to 68k version using Aki Laukkanen's
+68060-optimised c2p routine from ADoom.
+
+-nocdaudio is no longer required if cdplayer.library fails to open.
+
+More changes to PLL code for calculating bus speed.  Now it seems to
+work with ppc.library, but still needs -bus with WarpOS + ppclibemu
+emulation.
+
+Aspect ratio fix accounts for LACE, HIRES and SUPERHIRES in native
+modes.
+
+Added -directcgx option.  This causes awinquake to render 3D scenes
+directly into any gfx-card that supports cybergraphics.  Normally
+awinquake renders into fastmem, then copies to the gfx-card with
+WritePixelArray8().  On my system, -directcgx is much slower, because
+gfx-card VRAM is uncached and Quake renders by bytes (pixels).  Also,
+-directcgx flickers like hell, because there is no double-buffering.
+
+Increased the maximum allowable resolution from 1280x1024 to
+1600x1280.  Just for fun, try the slow 68k version in a 1600x1280
+cybergraphics mode with -directcgx.  You can watch Quake draw
+individual polygons.  Turn the 68k caches off for even more
+enlightenment as to how Quake works...
+
+Inner loop code of awinquakeppc is now compiled with gcc 2.95.2
+instead of gcc 2.7.2.1, for a slight speed increase.
+
+OS-call cache flushing optimisation tricks with PowerUp speed up
+awinquakeppc slightly, hopefully without introducing any bugs.
+
+Wrote some hand-optimised PPC assembly code to speed up awinquakeppc
+slightly more.  Currently only awinquakeppc uses assembly
+optimisations --- awinquakewos and awinquakevbcc still have none.  I
+can't directly use the same assembly code in all versions, because
+StormC and VBCC have different static variable access conventions to
+SAS/C and gcc.
+
+
+
+v0.5   30 Jan 2000
+
+Memory heap was allocated twice.  Oops.  Fixed.  It should use a lot
+less memory now.
+
+Added native WarpOS versions awinquakewos and awinquakevbcc compiled
+with StormC 4.0 beta and vbcc 0.7 respectively.
+
+Added joypad support code and improved mouse control using Jarmo
+Laakkonen's source code.
+
+
+
+v0.4    7 Jan 2000
+
+Should work under Kickstart 3.0 now.
+
+Added -mouse and -mousepointer.
+
+awinquakeppc should calculate the correct bus speed on PowerUp now.
+WarpOS+ppclibemu still often gets it wrong.
+
+Now writes config.cfg on exit.
+
+Handles slashes and colons in directory names better.
+
+
+
+v0.3    4 Jan 2000
+
+Fixed the crash that occurred if you don't have cybergraphics.library
+
+Added -mem parameter.
+
+
+
+v0.2   30 Dec 1999
+
+First Aminet release.
+
+
+
+THANKS:
+-------
+
+Thanks to John Carmack and ID Software for one of the best games ever!
+
+
+
+Peter McGavin.  (p.mcgavin@irl.cri.nz)

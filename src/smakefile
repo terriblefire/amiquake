@@ -1,0 +1,221 @@
+#
+# Quake Makefile for Amiga SAS/C
+#
+
+COMMONFLAGS = parm=reg cpu=68060 math=68881 verbose define=id68k=1 \
+        code=far stringmerge data=far absfuncpointer define=AMIGA
+
+SCFLAGS = optimize opttime optsched nodebug nostackcheck $(COMMONFLAGS)
+
+#SCFLAGS = optimize opttime optsched debug=full nostackcheck $(COMMONFLAGS)
+
+#SCFLAGS = nooptimize debug=full stackcheck $(COMMONFLAGS)
+
+#SCFLAGS = profile optimize opttime debug=full nostackcheck $(COMMONFLAGS)
+
+COMMONPPCFLAGS = parm=reg verbose stringmerge code=far data=far define=AMIGA \
+	define=idppc=1
+
+SCPPCFLAGS = optimize opttime optsched nodebug nostackcheck $(COMMONPPCFLAGS)
+
+#SCPPCFLAGS = nooptimize debug=full $(COMMONPPCFLAGS)
+
+#SCPPCFLAGS = optimize opttime optsched debug=full nostackcheck $(COMMONPPCFLAGS)
+
+COMMONWOSFLAGS = -pc -d AMIGA -d __PPC__ -d NDEBUG -d __VBCC__ -gD -gC -gPPC -g81 -w+
+
+WOSFLAGS = -O9 $(COMMONWOSFLAGS)
+
+#WOSFLAGS = -O1 $(COMMONWOSFLAGS)
+
+COMMONVBCCFLAGS = +warpos -v -DAMIGA -D__PPC__ -DNDEBUG -amiga-align "-+"
+
+VBCCFLAGS = -O1 $(COMMONVBCCFLAGS)
+
+VBCCFLAGS2 = -O3 -maxoptpasses=20 $(COMMONVBCCFLAGS)
+
+OBJS1 = cd_amiga.o chase.o cl_demo.o cl_input.o cl_main.o cl_parse.o cl_tent.o cmd.o \
+ common.o console.o crc.o cvar.o d_edge.o d_fill.o d_init.o d_modech.o \
+ d_part.o d_polyse.o d_scan.o d_sky.o d_sprite.o d_surf.o d_vars.o d_zpoint.o \
+
+OBJS2 = draw.o host.o host_cmd.o in_amiga.o keys.o mathlib.o menu.o model.o \
+ net_dgrm.o net_loop.o net_main.o net_bsd.o net_amigaudp.o net_vcr.o nonintel.o pr_cmds.o \
+ pr_edict.o pr_exec.o r_aclip.o r_alias.o r_bsp.o r_draw.o r_edge.o r_efrag.o \
+
+OBJS3 = r_light.o r_main.o r_misc1.o r_misc2.o r_part.o r_sky.o r_sprite.o \
+ r_surf.o r_vars.o sbar.o screen.o snd_dma.o snd_mem.o snd_mix.o snd_amiga.o \
+ sv_main.o sv_move.o sv_phys.o sv_user.o sys_amiga.o vid_amiga.o view.o wad.o \
+ world.o zone.o amiga_d_68k.o amiga_r_68k.o amiga_d_polyse68k.o \
+ c2p8_040_amlaukka.o
+
+OBJS = $(OBJS1) $(OBJS2) $(OBJS3)
+
+OBJSGCC1 = cd_amiga.oGCC chase.oGCC cl_demo.oGCC cl_input.oGCC cl_main.oGCC cl_parse.oGCC cl_tent.oGCC cmd.oGCC \
+ common.oGCC console.oGCC crc.oGCC cvar.oGCC d_edge.oGCC d_fill.oGCC d_init.oGCC d_modech.oGCC \
+ d_part.oGCC d_polyse.oGCC d_scan.oGCC d_sky.oGCC d_sprite.oGCC d_surf.oGCC d_vars.oGCC d_zpoint.oGCC \
+
+OBJSGCC2 = draw.oGCC host.oGCC host_cmd.oGCC in_amiga.oGCC keys.oGCC mathlib.oGCC menu.oGCC model.oGCC \
+ net_dgrm.oGCC net_loop.oGCC net_main.oGCC net_bsd.oGCC net_amigaudp.oGCC net_vcr.oGCC nonintel.oGCC pr_cmds.oGCC \
+ pr_edict.oGCC pr_exec.oGCC r_aclip.oGCC r_alias.oGCC r_bsp.oGCC r_draw.oGCC r_edge.oGCC r_efrag.oGCC \
+
+OBJSGCC3 = r_light.oGCC r_main.oGCC r_misc.oGCC r_part.oGCC r_sky.oGCC r_sprite.oGCC \
+ r_surf.oGCC r_vars.oGCC sbar.oGCC screen.oGCC snd_dma.oGCC snd_mem.oGCC snd_mix.oGCC snd_amiga.oGCC \
+ sv_main.oGCC sv_move.oGCC sv_phys.oGCC sv_user.oGCC sys_amiga.oGCC vid_amiga.oGCC view.oGCC wad.oGCC \
+ world.oGCC zone.oGCC
+
+OBJSGCC = $(OBJSGCC1) $(OBJSGCC2) $(OBJSGCC3)
+
+# *.oPPC files are compiled with scppc
+# *.oPPC2 files are compiled with ppc-amigaos-gcc
+
+#OBJSPPC1 = lib:sprofutil.o cd_amiga.oPPC chase.oPPC cl_demo.oPPC cl_input.oPPC cl_main.oPPC cl_parse.oPPC cl_tent.oPPC cmd.oPPC \
+OBJSPPC1 = cd_amiga.oPPC chase.oPPC cl_demo.oPPC cl_input.oPPC cl_main.oPPC cl_parse.oPPC cl_tent.oPPC cmd.oPPC \
+ common.oPPC console.oPPC crc.oPPC cvar.oPPC d_edge.oPPC2 d_fill.oPPC d_init.oPPC d_modech.oPPC \
+ d_part.oPPC2 d_polyse.oPPC2 d_scan.oPPC2 d_sky.oPPC d_sprite.oPPC d_surf.oPPC d_vars.oPPC d_zpoint.oPPC \
+
+OBJSPPC2 = draw.oPPC host.oPPC host_cmd.oPPC in_amiga.oPPC keys.oPPC mathlib.oPPC2 menu.oPPC model.oPPC \
+ net_dgrm.oPPC net_loop.oPPC net_main.oPPC net_bsd.oPPC net_amigaudp.oPPC net_vcr.oPPC nonintel.oPPC pr_cmds.oPPC \
+ pr_edict.oPPC pr_exec.oPPC r_aclip.oPPC2 r_alias.oPPC2 r_bsp.oPPC2 r_draw.oPPC2 r_edge.oPPC2 r_efrag.oPPC \
+
+OBJSPPC3 = r_light.oPPC2 r_main.oPPC r_misc.oPPC r_part.oPPC r_sky.oPPC r_sprite.oPPC \
+ r_surf.oPPC2 r_vars.oPPC sbar.oPPC screen.oPPC snd_dma.oPPC2 snd_mem.oPPC snd_mix.oPPC2 snd_amiga.oPPC \
+ sv_main.oPPC sv_move.oPPC sv_phys.oPPC sv_user.oPPC sys_amiga.oPPC vid_amiga.oPPC view.oPPC wad.oPPC \
+ world.oPPC zone.oPPC amiga_ppc_c2p.oPPC amiga_ppc_d_scan.oPPC amiga_ppc_mathlib.oPPC \
+ amiga_cgxtagfns.oPPC amiga_socket_lib.oPPC amiga_timer.oPPC
+
+OBJSWOS = $(OBJSWOS1) $(OBJSWOS2) $(OBJSWOS3)
+
+# WOS objects are also listed in wosobjects.txt.
+
+OBJSWOS1 = cd_amiga.oWOS chase.oWOS cl_demo.oWOS cl_input.oWOS cl_main.oWOS cl_parse.oWOS cl_tent.oWOS cmd.oWOS \
+ common.oWOS console.oWOS crc.oWOS cvar.oWOS d_edge.oWOS d_fill.oWOS d_init.oWOS d_modech.oWOS \
+ d_part.oWOS d_polyse.oWOS d_scan.oWOS d_sky.oWOS d_sprite.oWOS d_surf.oWOS d_vars.oWOS d_zpoint.oWOS \
+
+OBJSWOS2 = draw.oWOS host.oWOS host_cmd.oWOS in_amiga.oWOS keys.oWOS mathlib.oWOS menu.oWOS model.oWOS \
+ net_dgrm.oWOS net_loop.oWOS net_main.oWOS net_bsd.oWOS net_amigaudp.oWOS net_vcr.oWOS net_vcr.oWOS nonintel.oWOS pr_cmds.oWOS \
+ pr_edict.oWOS pr_exec.oWOS r_aclip.oWOS r_alias.oWOS r_bsp.oWOS r_draw.oWOS r_edge.oWOS r_efrag.oWOS \
+
+OBJSWOS3 = r_light.oWOS r_main.oWOS r_misc.oWOS r_part.oWOS r_sky.oWOS r_sprite.oWOS \
+ r_surf.oWOS r_vars.oWOS sbar.oWOS screen.oWOS snd_dma.oWOS snd_mem.oWOS snd_mix.oWOS snd_amiga.oWOS \
+ sv_main.oWOS sv_move.oWOS sv_phys.oWOS sv_user.oWOS sys_amiga.oWOS vid_amiga.oWOS view.oWOS wad.oWOS \
+ world.oWOS zone.oWOS writechunkypixels_stub.oWOS cybergraphics_protos_stub.oWOS \
+ cdplayer_protos_stub.oWOS lowlevel_protos_stub.oWOS amiga_ppc_c2p.oWOS \
+ amiga_timer.oWOS
+
+OBJSVBCC = $(OBJSVBCC1) $(OBJSVBCC2) $(OBJSVBCC3)
+
+# *.oVBCC files are compiled with -O1
+# *.oVBCC2 files are compiled with -O3    Must also change vbccobjects.txt.
+
+OBJSVBCC1 = cd_amiga.oVBCC chase.oVBCC cl_demo.oVBCC cl_input.oVBCC cl_main.oVBCC cl_parse.oVBCC cl_tent.oVBCC cmd.oVBCC \
+ common.oVBCC console.oVBCC crc.oVBCC cvar.oVBCC d_edge.oVBCC2 d_fill.oVBCC d_init.oVBCC d_modech.oVBCC \
+ d_part.oVBCC2 d_polyse.oVBCC2 d_scan.oVBCC2 d_sky.oVBCC d_sprite.oVBCC d_surf.oVBCC d_vars.oVBCC d_zpoint.oVBCC \
+
+OBJSVBCC2 = draw.oVBCC host.oVBCC host_cmd.oVBCC in_amiga.oVBCC keys.oVBCC mathlib.oVBCC menu.oVBCC model.oVBCC \
+ net_dgrm.oVBCC net_loop.oVBCC net_main.oVBCC net_bsd.oVBCC net_amigaudp.oVBCC net_vcr.oVBCC nonintel.oVBCC pr_cmds.oVBCC \
+ pr_edict.oVBCC pr_exec.oVBCC r_aclip.oVBCC2 r_alias.oVBCC2 r_bsp.oVBCC r_draw.oVBCC r_edge.oVBCC2 r_efrag.oVBCC \
+
+OBJSVBCC3 = r_light.oVBCC2 r_main.oVBCC r_misc.oVBCC r_part.oVBCC r_sky.oVBCC r_sprite.oVBCC \
+ r_surf.oVBCC2 r_vars.oVBCC sbar.oVBCC screen.oVBCC snd_dma.oVBCC snd_mem.oVBCC snd_mix.oVBCC snd_amiga.oVBCC \
+ sv_main.oVBCC sv_move.oVBCC sv_phys.oVBCC sv_user.oVBCC sys_amiga.oVBCC vid_amiga.oVBCC view.oVBCC wad.oVBCC \
+ world.oVBCC zone.oVBCC amiga_ppc_c2p.oVBCC amiga_timer.oVBCC
+
+all: awinquake awinquakeppc awinquakewos awinquakevbcc awinquakegcc
+
+awinquake: $(OBJS1) $(OBJS2) $(OBJS3)
+	slink < with <
+	from lib:c.o $(OBJS1) $(OBJS2) $(OBJS3) to awinquake \
+	lib lib:scm881.lib lib:sc.lib lib:amiga.lib \
+	noicons verbose smallcode stripdebug
+<
+#	addsym
+
+awinquakegcc: $(OBJSGCC1) $(OBJSGCC2) $(OBJSGCC3)
+	gcc $(OBJS1) $(OBJS2) $(OBJS3) -o awinquakegcc
+
+awinquakeppc: temp1.o temp2.o temp3.o
+	ppc-amigaos-ld -r -o awinquakeppc lib:c_ppc.o temp1.o temp2.o temp3.o \
+		lib:libmoto.a lib:scppc.a lib:end.o --Map ram:awinquakeppc.map
+	protect awinquakeppc +e
+
+awinquakewos: $(OBJSWOS1) $(OBJSWOS2) $(OBJSWOS3)
+	assign sl: stormc:stormsys/lib
+	StormLink to awinquakewos stormc:stormsys/startups/startup603.o \
+	with wosobjects.txt \
+	lib storm603.lib ppcamiga.lib \
+	stormc:storm_socket/lib/socket.lib \
+	tmp_powerpc.lib sl:math603.lib \
+	sl:stormcstartup603.lib sl:stormcsupport603.lib map
+	assign sl: remove
+
+awinquakevbcc: $(OBJSVBCC1) $(OBJSVBCC2) $(OBJSVBCC3)
+	vlink -o awinquakevbcc -nostdlib -Lvlibwos: vlibwos:warpup.o \
+	-Fvbccobjects.txt -b amigaehf -Lvbccwos:lib -Lstormc:storm_socket/lib \
+	-lauto -lamiga -lcybergraphics -lcdplayer -lsocket -lppcmath -lm -lextra -lvc vlibwos:x.o \
+	-s -x
+
+.c.o:
+	sc ${SCFLAGS} $<
+
+.s.o:
+	sc cpu=68060 $<
+#	phxass INCPATH=include: NOEXE MACHINE=68020 OPT=2 $<
+
+.c.oGCC:
+	gcc -c -o $*.oGCC -O3 -m68040 -m68881 -DAMIGA -fomit-frame-pointer -funroll-loops -ffast-math -Ignu:include $<
+
+.c.oPPC:
+	scppc ${SCPPCFLAGS} objectname $*.oPPC $<
+
+.c.oPPC2:
+	ppc-amigaos-gcc -V 2.95.2 -c -O3 -DAMIGA -D__PPC__ -Didppc=1 -DNDEBUG -mcpu=604e -fomit-frame-pointer -funroll-loops -ffast-math -o $*.oPPC2 -Ignu:include $<
+#	ppc-amigaos-gcc -V egcs-2.91.66 -c -O3 -DAMIGA -D__PPC__ -Didppc=1 -DNDEBUG -mcpu=604 -fomit-frame-pointer -funroll-loops -ffast-math -o $*.oPPC2 -Ignu:include $<
+
+.s.oPPC:
+	pasm -o $*.oPPC $<
+
+.c.oWOS:
+	StormC_PPC -c ${WOSFLAGS} -o $*.oWOS $<
+
+.p.oWOS:
+	PowerASM TO $*.oWOS FROM $<
+
+.c.oVBCC:
+	vc -c ${VBCCFLAGS} -o $*.oVBCC $<
+
+.c.oVBCC2:
+	vc -c ${VBCCFLAGS2} -o $*.oVBCC2 $<
+
+.s.oVBCC:
+	pasm -o $*.oVBCC -F2 $<
+
+temp1.o: $(OBJSPPC1)
+	ppc-amigaos-ld $(LDFLAGS) -r -o temp1.o $(OBJSPPC1)
+
+temp2.o: $(OBJSPPC2)
+	ppc-amigaos-ld $(LDFLAGS) -r -o temp2.o $(OBJSPPC2)
+
+temp3.o: $(OBJSPPC3)
+	ppc-amigaos-ld $(LDFLAGS) -r -o temp3.o $(OBJSPPC3)
+
+# r_misc2.c doesn't work on 680x0 when optimised
+r_misc2.o: r_misc2.c
+	sc nooptimize nodebug $(COMMONFLAGS) r_misc2.c
+
+net_amigaudp.o: net_amigaudp.c
+	sc $(SCFLAGS) $< INCLUDEDIRECTORY=amitcp:netinclude
+
+net_amigaudp.oPPC: net_amigaudp.c
+	scppc $(SCPPCFLAGS) objectname $*.oPPC $< INCLUDEDIRECTORY=amitcp:netinclude
+
+# DEFINE=AMITCP_NEW_NAMES DEFINE=Inet_Addr=inet_addr
+
+net_amigaudp.oWOS: net_amigaudp.c
+	StormC_PPC -c ${WOSFLAGS} -o $*.oWOS $< -i "" -i stormc:storm_socket -i stormc:include
+
+net_amigaudp.oVBCC: net_amigaudp.c
+	vc -c ${VBCCFLAGS} -o $*.oVBCC $< -Istormc:storm_socket
+
+clean:
+	delete *.o
+	delete *.oPPC
