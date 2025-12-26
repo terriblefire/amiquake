@@ -1,0 +1,50 @@
+name: Build AmiQuake
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: amigadev/crosstools:m68k-amigaos
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build AmiQuake
+      run: |
+        make clean
+        make
+
+    - name: Check binary size
+      run: |
+        ls -lh build/AmiQuake_gcc
+        size build/AmiQuake_gcc || true
+
+    - name: Upload binary artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: AmiQuake-m68k-${{ github.sha }}
+        path: build/AmiQuake_gcc
+        retention-days: 90
+
+    - name: Create release on tag
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/AmiQuake_gcc
+        body: |
+          AmiQuake GCC m68k-amigaos build
+
+          - Target: Amiga 68040/68060 with FPU
+          - Size: 534KB (stripped)
+          - NovaCoder's optimized C2P routine
+          - Built with GCC m68k-amigaos toolchain
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
