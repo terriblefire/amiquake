@@ -7,8 +7,8 @@
 
 	include "exec/types.i"
 	include "exec/memory.i"
-	include "exec/funcdef.i"
-	include "exec/exec_lib.i"
+;	include "exec/funcdef.i"	; Not available in all NDK versions
+	include "lvo/exec_lib.i"
 	include "graphics/gfx.i"
 
 	XDEF	_c2p8
