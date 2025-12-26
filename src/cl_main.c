@@ -33,7 +33,7 @@ cvar_t	cl_nolerp = {"cl_nolerp","0"};
 
 cvar_t	lookspring = {"lookspring","0", true};
 cvar_t	lookstrafe = {"lookstrafe","0", true};
-cvar_t	sensitivity = {"sensitivity","3", true};
+cvar_t	sensitivity = {"sensitivity","6", true};
 
 cvar_t	m_pitch = {"m_pitch","0.022", true};
 cvar_t	m_yaw = {"m_yaw","0.022", true};
