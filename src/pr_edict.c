@@ -291,7 +291,7 @@ char *PR_ValueString (etype_t type, eval_t *val)
 		sprintf (line, "%s", pr_strings + val->string);
 		break;
 	case ev_entity:	
-		sprintf (line, "entity %i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)) );
+		sprintf (line, "entity %ld", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)) );
 		break;
 	case ev_function:
 		f = pr_functions + val->function;
@@ -314,7 +314,7 @@ char *PR_ValueString (etype_t type, eval_t *val)
 		sprintf (line, "pointer");
 		break;
 	default:
-		sprintf (line, "bad type %i", type);
+		sprintf (line, "bad type %ld", type);
 		break;
 	}
 	
@@ -343,7 +343,7 @@ char *PR_UglyValueString (etype_t type, eval_t *val)
 		sprintf (line, "%s", pr_strings + val->string);
 		break;
 	case ev_entity:	
-		sprintf (line, "%i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
+		sprintf (line, "%ld", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
 		break;
 	case ev_function:
 		f = pr_functions + val->function;
@@ -363,7 +363,7 @@ char *PR_UglyValueString (etype_t type, eval_t *val)
 		sprintf (line, "%f %f %f", val->vector[0], val->vector[1], val->vector[2]);
 		break;
 	default:
-		sprintf (line, "bad type %i", type);
+		sprintf (line, "bad type %ld", type);
 		break;
 	}
 	
@@ -389,11 +389,11 @@ char *PR_GlobalString (int ofs)
 	val = (void *)&pr_globals[ofs];
 	def = ED_GlobalAtOfs(ofs);
 	if (!def)
-		sprintf (line,"%i(???)", ofs);
+		sprintf (line,"%ld(???)", ofs);
 	else
 	{
 		s = PR_ValueString (def->type, val);
-		sprintf (line,"%i(%s)%s", ofs, pr_strings + def->s_name, s);
+		sprintf (line,"%ld(%s)%s", ofs, pr_strings + def->s_name, s);
 	}
 	
 	i = strlen(line);
@@ -412,9 +412,9 @@ char *PR_GlobalStringNoContents (int ofs)
 	
 	def = ED_GlobalAtOfs(ofs);
 	if (!def)
-		sprintf (line,"%i(???)", ofs);
+		sprintf (line,"%ld(???)", ofs);
 	else
-		sprintf (line,"%i(%s)", ofs, pr_strings + def->s_name);
+		sprintf (line,"%ld(%s)", ofs, pr_strings + def->s_name);
 	
 	i = strlen(line);
 	for ( ; i<20 ; i++)
@@ -447,7 +447,7 @@ void ED_Print (edict_t *ed)
 		return;
 	}
 
-	Con_Printf("\nEDICT %i:\n", NUM_FOR_EDICT(ed));
+	Con_Printf("\nEDICT %ld:\n", NUM_FOR_EDICT(ed));
 	for (i=1 ; i<progs->numfielddefs ; i++)
 	{
 		d = &pr_fielddefs[i];
@@ -538,7 +538,7 @@ void ED_PrintEdicts (void)
 {
 	int		i;
 	
-	Con_Printf ("%i entities\n", sv.num_edicts);
+	Con_Printf ("%ld entities\n", sv.num_edicts);
 	for (i=0 ; i<sv.num_edicts ; i++)
 		ED_PrintNum (i);
 }
@@ -591,11 +591,11 @@ void ED_Count (void)
 			step++;
 	}
 
-	Con_Printf ("num_edicts:%3i\n", sv.num_edicts);
-	Con_Printf ("active    :%3i\n", active);
-	Con_Printf ("view      :%3i\n", models);
-	Con_Printf ("touch     :%3i\n", solid);
-	Con_Printf ("step      :%3i\n", step);
+	Con_Printf ("num_edicts:%3ld\n", sv.num_edicts);
+	Con_Printf ("active    :%3ld\n", active);
+	Con_Printf ("view      :%3ld\n", models);
+	Con_Printf ("touch     :%3ld\n", solid);
+	Con_Printf ("step      :%3ld\n", step);
 
 }
 
@@ -973,7 +973,7 @@ void ED_LoadFromFile (char *data)
 		PR_ExecuteProgram (func - pr_functions);
 	}	
 
-	Con_DPrintf ("%i entities inhibited\n", inhibit);
+	Con_DPrintf ("%ld entities inhibited\n", inhibit);
 }
 
 
@@ -995,7 +995,7 @@ void PR_LoadProgs (void)
 	progs = (dprograms_t *)COM_LoadHunkFile ("progs.dat");
 	if (!progs)
 		Sys_Error ("PR_LoadProgs: couldn't load progs.dat");
-	Con_DPrintf ("Programs occupy %iK.\n", com_filesize/1024);
+	Con_DPrintf ("Programs occupy %ldK.\n", com_filesize/1024);
 
 	for (i=0 ; i<com_filesize ; i++)
 		CRC_ProcessByte (&pr_crc, ((byte *)progs)[i]);
@@ -1005,7 +1005,7 @@ void PR_LoadProgs (void)
 		((int *)progs)[i] = LittleLong ( ((int *)progs)[i] );		
 
 	if (progs->version != PROG_VERSION)
-		Sys_Error ("progs.dat has wrong version number (%i should be %i)", progs->version, PROG_VERSION);
+		Sys_Error ("progs.dat has wrong version number (%ld should be %ld)", progs->version, PROG_VERSION);
 	if (progs->crc != PROGHEADER_CRC)
 		Sys_Error ("progs.dat system vars have been modified, progdefs.h is out of date");
 
@@ -1089,7 +1089,7 @@ void PR_Init (void)
 edict_t *EDICT_NUM(int n)
 {
 	if (n < 0 || n >= sv.max_edicts)
-		Sys_Error ("EDICT_NUM: bad number %i", n);
+		Sys_Error ("EDICT_NUM: bad number %ld", n);
 	return (edict_t *)((byte *)sv.edicts+ (n)*pr_edict_size);
 }
 

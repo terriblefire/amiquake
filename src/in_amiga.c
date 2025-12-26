@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2000 Peter McGavin.
+Copyright (C) 1996-1997 Id Software, Inc.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -17,159 +17,62 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-// in_null.c -- for systems without a mouse
 
 #include "quakedef.h"
 
-#include <exec/exec.h>
-#include <libraries/lowlevel.h>
-#if defined(__STORM__) || defined(__VBCC__)
-#include <clib/exec_protos.h>
-#include <clib/lowlevel_protos.h>
-#else
-#include <proto/exec.h>
-#include <proto/lowlevel.h>
-#endif
+// Mouse globals set by vid_amiga.c
+extern short int mouseX;
+extern short int mouseY;
+extern qboolean mouse_has_moved;
 
-struct Library *LowLevelBase = NULL;
+cvar_t	m_filter = {"m_filter","1"};
 
-cvar_t m_filter = {"m_filter", "1"};
-
-qboolean using_mouse = false;
-qboolean mouse_has_moved = false;
-qboolean using_joypad = false;
-short int last_mouse[2] = {0, 0};
-
-/**********************************************************************/
-static void Init_Joypad (void)
-{
-  LowLevelBase = OpenLibrary ("lowlevel.library", 0);
-  if (LowLevelBase != NULL) {
-    Con_Printf ("Joypad enabled\n");
-    using_joypad = true;
-  } else {
-    Con_Printf ("Can't open lowlevel.libary\n");
-    using_joypad = false;
-  }
-}
-
-/**********************************************************************/
 void IN_Init (void)
 {
-  using_mouse = COM_CheckParm("-mouse");
-  if (using_mouse)
     Cvar_RegisterVariable (&m_filter);
-
-  using_joypad = COM_CheckParm ("-joypad");
-  if (using_joypad)
-    Init_Joypad ();
 }
 
-/**********************************************************************/
 void IN_Shutdown (void)
 {
-  if (LowLevelBase != NULL) {
-    CloseLibrary (LowLevelBase);
-    LowLevelBase = NULL;
-  }
+
 }
 
-/**********************************************************************/
-static void Read_Joypad (void)
-{
-  ULONG joypos;
-
-  joypos = ReadJoyPort (1);
-
-  if (joypos & JPF_JOY_LEFT)
-    Key_Event (K_AUX1, true);
-  else
-    Key_Event (K_AUX1, false);
-
-  if (joypos & JPF_JOY_RIGHT)
-    Key_Event (K_AUX2, true);
-  else
-    Key_Event (K_AUX2, false);
-
-  if (joypos & JPF_JOY_UP)
-    Key_Event (K_AUX3, true);
-  else
-    Key_Event (K_AUX3, false);
-
-  if (joypos & JPF_JOY_DOWN)
-    Key_Event (K_AUX4, true);
-  else
-    Key_Event (K_AUX4, false);
-
-  if (joypos & JPF_BUTTON_RED)
-    Key_Event (K_AUX5, true);
-  else
-    Key_Event (K_AUX5, false);
-
-  if (joypos & JPF_BUTTON_GREEN)
-    Key_Event (K_AUX6, true);
-  else
-    Key_Event (K_AUX6, false);
-
-  if (joypos & JPF_BUTTON_YELLOW)
-    Key_Event (K_AUX7, true);
-  else
-    Key_Event (K_AUX7, false);
-
-  if (joypos & JPF_BUTTON_BLUE)
-    Key_Event (K_AUX8, true);
-  else
-    Key_Event (K_AUX8, false);
-
-  if (joypos & JPF_BUTTON_PLAY)
-    Key_Event (K_AUX9, true);
-  else
-    Key_Event (K_AUX9, false);
-
-  if (joypos & JPF_BUTTON_FORWARD)
-    Key_Event (K_AUX10, true);
-  else
-    Key_Event (K_AUX10, false);
-
-  if (joypos & JPF_BUTTON_REVERSE)
-    Key_Event (K_AUX11 ,true);
-  else
-    Key_Event (K_AUX11, false);
-}
-
-/**********************************************************************/
 void IN_Commands (void)
 {
-  if (using_joypad)
-    Read_Joypad ();
+    // NovaCoder's version removed joypad support - nothing to do here
 }
 
-/**********************************************************************/
-void IN_Move (usercmd_t *cmd)
-{
-  short int mx, my;
-  double mouse_x, mouse_y;
-  static int old_mouse_x = 0, old_mouse_y = 0;
+
+static int old_mouse_x = 0;
+static int old_mouse_y = 0;
+
+void IN_Move (usercmd_t *cmd) {
+    
+  int mouse_x, mouse_y;
 
   if (!mouse_has_moved)
     return;
+    
+  // Reset.  
   mouse_has_moved = false;
 
-  mx = (last_mouse[0] >> 1) << 3;
-  my = (last_mouse[1] >> 1) << 3;
-
-  if (m_filter.value) {
-    mouse_x = 0.5 * (mx + old_mouse_x);
-    mouse_y = 0.5 * (my + old_mouse_y);
-  } else {
-    mouse_x = (double)mx;
-    mouse_y = (double)my;
+  if (m_filter.value)
+  {
+    mouse_x = ((mouseX << 2) + old_mouse_x) * 0.5;
+    mouse_y = ((mouseY << 2) + old_mouse_y) * 0.5;
   }
-  old_mouse_x = mx;
-  old_mouse_y = my;
+  else
+  {
+   mouse_x = (mouseX << 2);
+   mouse_y = (mouseY << 2);
+  }
 
-  mouse_x *= sensitivity.value;
-  mouse_y *= sensitivity.value;
+	old_mouse_x = (mouseX << 2);
+	old_mouse_y = (mouseY << 2);
+	
+	mouse_x *= sensitivity.value;
+	mouse_y *= sensitivity.value;
+
 
   /* add mouse X/Y movement to cmd */
   if ((in_strafe.state & 1) || (lookstrafe.value && (in_mlook.state & 1)))
@@ -191,34 +94,6 @@ void IN_Move (usercmd_t *cmd)
       cmd->upmove -= m_forward.value * mouse_y;
     else
       cmd->forwardmove -= m_forward.value * mouse_y;
-  }
+  }    
 }
 
-/**********************************************************************/
-#ifdef __SASC
-void _STD_IN_Shutdown (void)
-{
-//  printf ("_STD_IN_Shutdown\n");
-  IN_Shutdown ();
-}
-#endif
-
-/**********************************************************************/
-#ifdef __STORM__
-void EXIT_9_IN_Shutdown (void)
-{
-//  printf ("EXIT_9_IN_Shutdown\n");
-  IN_Shutdown ();
-}
-#endif
-
-/**********************************************************************/
-#ifdef __VBCC__
-void _EXIT_9_IN_Shutdown (void)
-{
-//  printf ("_EXIT_9_IN_Shutdown\n");
-  IN_Shutdown ();
-}
-#endif
-
-/**********************************************************************/

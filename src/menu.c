@@ -300,7 +300,7 @@ void M_Main_Draw (void)
 
 	f = (int)(host_time * 10)%6;
 
-	M_DrawTransPic (54, 32 + m_main_cursor * 20,Draw_CachePic( va("gfx/menudot%i.lmp", f+1 ) ) );
+	M_DrawTransPic (54, 32 + m_main_cursor * 20,Draw_CachePic( va("gfx/menudot%ld.lmp", f+1 ) ) );
 }
 
 
@@ -383,7 +383,7 @@ void M_SinglePlayer_Draw (void)
 
 	f = (int)(host_time * 10)%6;
 
-	M_DrawTransPic (54, 32 + m_singleplayer_cursor * 20,Draw_CachePic( va("gfx/menudot%i.lmp", f+1 ) ) );
+	M_DrawTransPic (54, 32 + m_singleplayer_cursor * 20,Draw_CachePic( va("gfx/menudot%ld.lmp", f+1 ) ) );
 }
 
 
@@ -454,11 +454,11 @@ void M_ScanSaves (void)
 	{
 		strcpy (m_filenames[i], "--- UNUSED SLOT ---");
 		loadable[i] = false;
-		sprintf (name, "%s/s%i.sav", com_gamedir, i);
+		sprintf (name, "%s/s%ld.sav", com_gamedir, i);
 		f = fopen (name, "r");
 		if (!f)
 			continue;
-		fscanf (f, "%i\n", &version);
+		fscanf (f, "%ld\n", &version);
 		fscanf (f, "%79s\n", name);
 		strncpy (m_filenames[i], name, sizeof(m_filenames[i])-1);
 
@@ -547,7 +547,7 @@ void M_Load_Key (int k)
 		SCR_BeginLoadingPlaque ();
 
 	// issue the load command
-		Cbuf_AddText (va ("load s%i\n", load_cursor) );
+		Cbuf_AddText (va ("load s%ld\n", load_cursor) );
 		return;
 
 	case K_UPARROW:
@@ -580,7 +580,7 @@ void M_Save_Key (int k)
 	case K_ENTER:
 		m_state = m_none;
 		key_dest = key_game;
-		Cbuf_AddText (va("save s%i\n", load_cursor));
+		Cbuf_AddText (va("save s%ld\n", load_cursor));
 		return;
 
 	case K_UPARROW:
@@ -628,7 +628,7 @@ void M_MultiPlayer_Draw (void)
 
 	f = (int)(host_time * 10)%6;
 
-	M_DrawTransPic (54, 32 + m_multiplayer_cursor * 20,Draw_CachePic( va("gfx/menudot%i.lmp", f+1 ) ) );
+	M_DrawTransPic (54, 32 + m_multiplayer_cursor * 20,Draw_CachePic( va("gfx/menudot%ld.lmp", f+1 ) ) );
 
 	if (serialAvailable || ipxAvailable || tcpipAvailable)
 		return;
@@ -799,7 +799,7 @@ forward:
 		if (Q_strcmp(hostname.string, setup_hostname) != 0)
 			Cvar_Set("hostname", setup_hostname);
 		if (setup_top != setup_oldtop || setup_bottom != setup_oldbottom)
-			Cbuf_AddText( va ("color %i %i\n", setup_top, setup_bottom) );
+			Cbuf_AddText( va ("color %ld %ld\n", setup_top, setup_bottom) );
 		m_entersound = true;
 		M_Menu_MultiPlayer_f ();
 		break;
@@ -971,7 +971,7 @@ void M_Net_Draw (void)
 	M_Print (f, 166, net_helpMessage[m_net_cursor*4+3]);
 
 	f = (int)(host_time * 10)%6;
-	M_DrawTransPic (54, 32 + m_net_cursor * 20,Draw_CachePic( va("gfx/menudot%i.lmp", f+1 ) ) );
+	M_DrawTransPic (54, 32 + m_net_cursor * 20,Draw_CachePic( va("gfx/menudot%ld.lmp", f+1 ) ) );
 }
 
 
@@ -1544,7 +1544,7 @@ void M_Menu_Help_f (void)
 
 void M_Help_Draw (void)
 {
-	M_DrawPic (0, 0, Draw_CachePic ( va("gfx/help%i.lmp", help_page)) );
+	M_DrawPic (0, 0, Draw_CachePic ( va("gfx/help%ld.lmp", help_page)) );
 }
 
 
@@ -2558,7 +2558,7 @@ void M_GameOptions_Draw (void)
 	M_Print (160, 40, "begin game");
 
 	M_Print (0, 56, "      Max players");
-	M_Print (160, 56, va("%i", maxplayers) );
+	M_Print (160, 56, va("%ld", maxplayers) );
 
 	M_Print (0, 64, "        Game Type");
 	if (coop.value)
@@ -2610,13 +2610,13 @@ void M_GameOptions_Draw (void)
 	if (fraglimit.value == 0)
 		M_Print (160, 88, "none");
 	else
-		M_Print (160, 88, va("%i frags", (int)fraglimit.value));
+		M_Print (160, 88, va("%ld frags", (int)fraglimit.value));
 
 	M_Print (0, 96, "       Time Limit");
 	if (timelimit.value == 0)
 		M_Print (160, 96, "none");
 	else
-		M_Print (160, 96, va("%i minutes", (int)timelimit.value));
+		M_Print (160, 96, va("%ld minutes", (int)timelimit.value));
 
 	M_Print (0, 112, "         Episode");
    //MED 01/06/97 added hipnotic episodes

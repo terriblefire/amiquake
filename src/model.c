@@ -473,7 +473,7 @@ void Mod_LoadTextures (lump_t *l)
 		{
 			tx2 = anims[j];
 			if (!tx2)
-				Sys_Error ("Missing frame %i of %s",j, tx->name);
+				Sys_Error ("Missing frame %ld of %s",j, tx->name);
 			tx2->anim_total = max * ANIM_CYCLE;
 			tx2->anim_min = j * ANIM_CYCLE;
 			tx2->anim_max = (j+1) * ANIM_CYCLE;
@@ -485,7 +485,7 @@ void Mod_LoadTextures (lump_t *l)
 		{
 			tx2 = altanims[j];
 			if (!tx2)
-				Sys_Error ("Missing frame %i of %s",j, tx->name);
+				Sys_Error ("Missing frame %ld of %s",j, tx->name);
 			tx2->anim_total = altmax * ANIM_CYCLE;
 			tx2->anim_min = j * ANIM_CYCLE;
 			tx2->anim_max = (j+1) * ANIM_CYCLE;
@@ -1152,7 +1152,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 
 	i = LittleLong (header->version);
 	if (i != BSPVERSION)
-		Sys_Error ("Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", mod->name, i, BSPVERSION);
+		Sys_Error ("Mod_LoadBrushModel: %s has wrong version number (%ld should be %ld)", mod->name, i, BSPVERSION);
 
 // swap all the lumps
 	mod_base = (byte *)header;
@@ -1210,7 +1210,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 		{	// duplicate the basic information
 			char	name[10];
 
-			sprintf (name, "*%i", i+1);
+			sprintf (name, "*%ld", i+1);
 			loadmodel = Mod_FindName (name);
 			*loadmodel = *mod;
 			strcpy (loadmodel->name, name);
@@ -1369,7 +1369,7 @@ void * Mod_LoadAliasSkin (void * pin, int *pskinindex, int skinsize,
 	}
 	else
 	{
-		Sys_Error ("Mod_LoadAliasSkin: driver set invalid r_pixbytes: %d\n",
+		Sys_Error ("Mod_LoadAliasSkin: driver set invalid r_pixbytes: %ld\n",
 				 r_pixbytes);
 	}
 
@@ -1461,7 +1461,7 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 
 	version = LittleLong (pinmodel->version);
 	if (version != ALIAS_VERSION)
-		Sys_Error ("%s has wrong version number (%i should be %i)",
+		Sys_Error ("%s has wrong version number (%ld should be %ld)",
 				 mod->name, version, ALIAS_VERSION);
 
 //
@@ -1491,7 +1491,7 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 	pmodel->skinheight = LittleLong (pinmodel->skinheight);
 
 	if (pmodel->skinheight > MAX_LBM_HEIGHT)
-		Sys_Error ("model %s has a skin taller than %d", mod->name,
+		Sys_Error ("model %s has a skin taller than %ld", mod->name,
 				   MAX_LBM_HEIGHT);
 
 	pmodel->numverts = LittleLong (pinmodel->numverts);
@@ -1533,7 +1533,7 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 	skinsize = pmodel->skinheight * pmodel->skinwidth;
 
 	if (numskins < 1)
-		Sys_Error ("Mod_LoadAliasModel: Invalid # of skins: %d\n", numskins);
+		Sys_Error ("Mod_LoadAliasModel: Invalid # of skins: %ld\n", numskins);
 
 	pskintype = (daliasskintype_t *)&pinmodel[1];
 
@@ -1606,7 +1606,7 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 // load the frames
 //
 	if (numframes < 1)
-		Sys_Error ("Mod_LoadAliasModel: Invalid # of frames: %d\n", numframes);
+		Sys_Error ("Mod_LoadAliasModel: Invalid # of frames: %ld\n", numframes);
 
 	pframetype = (daliasframetype_t *)&pintriangles[pmodel->numtris];
 
@@ -1710,7 +1710,7 @@ void * Mod_LoadSpriteFrame (void * pin, mspriteframe_t **ppframe)
 	}
 	else
 	{
-		Sys_Error ("Mod_LoadSpriteFrame: driver set invalid r_pixbytes: %d\n",
+		Sys_Error ("Mod_LoadSpriteFrame: driver set invalid r_pixbytes: %ld\n",
 				 r_pixbytes);
 	}
 
@@ -1790,7 +1790,7 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 	version = LittleLong (pin->version);
 	if (version != SPRITE_VERSION)
 		Sys_Error ("%s has wrong version number "
-				 "(%i should be %i)", mod->name, version, SPRITE_VERSION);
+				 "(%ld should be %ld)", mod->name, version, SPRITE_VERSION);
 
 	numframes = LittleLong (pin->numframes);
 
@@ -1816,7 +1816,7 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 // load the frames
 //
 	if (numframes < 1)
-		Sys_Error ("Mod_LoadSpriteModel: Invalid # of frames: %d\n", numframes);
+		Sys_Error ("Mod_LoadSpriteModel: Invalid # of frames: %ld\n", numframes);
 
 	mod->numframes = numframes;
 	mod->flags = 0;

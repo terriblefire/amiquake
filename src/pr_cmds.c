@@ -574,13 +574,13 @@ void PF_sound (void)
 	attenuation = G_FLOAT(OFS_PARM4);
 	
 	if (volume < 0 || volume > 255)
-		Sys_Error ("SV_StartSound: volume = %i", volume);
+		Sys_Error ("SV_StartSound: volume = %ld", volume);
 
 	if (attenuation < 0 || attenuation > 4)
 		Sys_Error ("SV_StartSound: attenuation = %f", attenuation);
 
 	if (channel < 0 || channel > 7)
-		Sys_Error ("SV_StartSound: channel = %i", channel);
+		Sys_Error ("SV_StartSound: channel = %ld", channel);
 
 	SV_StartSound (entity, channel, sample, volume, attenuation);
 }
@@ -932,7 +932,7 @@ void PF_ftos (void)
 	v = G_FLOAT(OFS_PARM0);
 	
 	if (v == (int)v)
-		sprintf (pr_string_temp, "%d",(int)v);
+		sprintf (pr_string_temp, "%ld",(int)v);
 	else
 		sprintf (pr_string_temp, "%5.1f",v);
 	G_INT(OFS_RETURN) = pr_string_temp - pr_strings;
@@ -954,7 +954,7 @@ void PF_vtos (void)
 #ifdef QUAKE2
 void PF_etos (void)
 {
-	sprintf (pr_string_temp, "entity %i", G_EDICTNUM(OFS_PARM0));
+	sprintf (pr_string_temp, "entity %ld", G_EDICTNUM(OFS_PARM0));
 	G_INT(OFS_RETURN) = pr_string_temp - pr_strings;
 }
 #endif

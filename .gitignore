@@ -1,0 +1,18 @@
+# Build artifacts
+obj/
+build/
+
+# Analysis and reverse engineering
+novacoder/
+c2p_disasm.txt
+
+# PAK files (not part of source)
+build/ID1/
+
+# Backup files
+*.bak
+*.bak2
+*.bak3
+
+# User settings
+.claude/

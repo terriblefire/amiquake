@@ -1495,7 +1495,8 @@ int COM_FindFile (char *filename, int *handle, FILE **file)
 	}
 	
 	Sys_Printf ("FindFile: can't find %s\n", filename);
-	
+	fflush(stdout);
+
 	if (handle)
 		*handle = -1;
 	else
@@ -1685,11 +1686,13 @@ pack_t *COM_LoadPackFile (char *packfile)
 	Sys_FileRead (packhandle, (void *)info, header.dirlen);
 
 // crc the directory to check for modifications
+	// NOTE: CRC check disabled - different shareware versions have different CRCs
+	// File count check is sufficient for detecting modified PAK files
 	CRC_Init (&crc);
 	for (i=0 ; i<header.dirlen ; i++)
 		CRC_ProcessByte (&crc, ((byte *)info)[i]);
-	if (crc != PAK0_CRC)
-		com_modified = true;
+	crc = CRC_Value(crc);
+	// CRC check disabled: if (crc != PAK0_CRC) com_modified = true;
 
 // parse the directory
 	for (i=0 ; i<numpackfiles ; i++)
@@ -1704,7 +1707,7 @@ pack_t *COM_LoadPackFile (char *packfile)
 	pack->handle = packhandle;
 	pack->numfiles = numpackfiles;
 	pack->files = newfiles;
-	
+
 	Con_Printf ("Added packfile %s (%i files)\n", packfile, numpackfiles);
 	return pack;
 }
@@ -1740,22 +1743,39 @@ void COM_AddGameDirectory (char *dir)
 //
 	for (i=0 ; ; i++)
 	{
+		searchpath_t *s;
+		qboolean already_loaded = false;
+
 #ifdef AMIGA
 		if (strlen(dir) == 0 ||
 		    dir[strlen(dir)-1] == ':')
-			sprintf (pakfile, "%spak%i.pak", dir, i);
+			sprintf (pakfile, "%spak%ld.pak", dir, (long)i);
 		else
-			sprintf (pakfile, "%s/pak%i.pak", dir, i);
+			sprintf (pakfile, "%s/pak%ld.pak", dir, (long)i);
 #else
-		sprintf (pakfile, "%s/pak%i.pak", dir, i);
+		sprintf (pakfile, "%s/pak%d.pak", dir, i);
 #endif
+
+		// Check if this PAK file is already loaded
+		for (s = com_searchpaths; s; s = s->next)
+		{
+			if (s->pack && !strcmp(s->pack->filename, pakfile))
+			{
+				already_loaded = true;
+				break;
+			}
+		}
+
+		if (already_loaded)
+			break;  // PAKs already loaded from this directory, stop trying
+
 		pak = COM_LoadPackFile (pakfile);
 		if (!pak)
 			break;
 		search = Hunk_Alloc (sizeof(searchpath_t));
 		search->pack = pak;
 		search->next = com_searchpaths;
-		com_searchpaths = search;               
+		com_searchpaths = search;
 	}
 
 //
@@ -1845,6 +1865,8 @@ void COM_InitFilesystem (void)
 	i = COM_CheckParm ("-game");
 	if (i && i < com_argc-1)
 	{
+		printf("DEBUG: -game parameter found, setting com_modified = true\n");
+		fflush(stdout);
 		com_modified = true;
 #ifdef AMIGA
 		if (strlen(basedir) == 0 ||
@@ -1864,6 +1886,8 @@ void COM_InitFilesystem (void)
 	i = COM_CheckParm ("-path");
 	if (i)
 	{
+		printf("DEBUG: -path parameter found, setting com_modified = true\n");
+		fflush(stdout);
 		com_modified = true;
 		com_searchpaths = NULL;
 		while (++i < com_argc)

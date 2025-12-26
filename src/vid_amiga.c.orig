@@ -30,7 +30,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <dos/dos.h>
 #include <graphics/gfx.h>
 #include <graphics/gfxbase.h>
-#include <graphics/displayinfo.h>
 #include <intuition/intuition.h>
 #include <utility/tagitem.h>
 #include <libraries/asl.h>
@@ -66,20 +65,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef __PPC__
 extern void ppc_c2p_line (int line, int src, struct BitMap *dst, int cnt);
 #else
-#ifdef __GNUC__
-// GCC-compatible C2P stub - will link to assembly implementation
-extern void *c2p8_reloc(struct BitMap *bitmap __asm("a0"));
-extern void c2p8_deinit(void *c2p __asm("a0"));
-extern void c2p8(void *c2p __asm("a0"), struct BitMap *bmp __asm("a1"), UBYTE *chunky __asm("a2"), ULONG size __asm("d0"));
-#else
 #include "c2p8_040_amlaukka.h"
 #endif
-#endif
 
-// Mouse globals for NovaCoder's simplified input handling
-// Mouse globals now defined in sys_amiga.c
-extern short int mouseX;
-extern short int mouseY;
+extern qboolean using_mouse;
+extern short int last_mouse[2];
 extern qboolean mouse_has_moved;
 
 #define	BASEWIDTH	320
@@ -108,7 +98,7 @@ struct Library *CyberGfxBase = NULL;
 struct Library *AslBase = NULL;
 
 static struct Screen *video_screen = NULL;
-struct Window *video_window = NULL;  // Non-static so sys_amiga.c can access it
+static struct Window *video_window = NULL;
 static struct RastPort tmp_rp, rp;
 static struct ScreenModeRequester *smr = NULL;
 static struct ScreenBuffer *sbuffer[3] = {NULL, NULL, NULL};
@@ -125,7 +115,7 @@ static struct BitMap tmp_bm = {
 };
 
 #ifndef __PPC__
-struct Device *TimerBase = NULL;  // Changed from Library to Device for GCC NDK compatibility
+struct Library *TimerBase = NULL;
 static struct MsgPort *timermp = NULL;
 static struct timerequest *timerio = NULL;
 static ULONG timerclosed = TRUE;
@@ -161,16 +151,9 @@ void	VID_ShiftPalette (unsigned char *palette)
 
 /****************************************************************************/
 #ifndef __PPC__
-#ifdef __GNUC__
-// GCC version - regular C function (hook will work without register optimizations)
-static ULONG smr_filter (struct Hook *smr_filter_hook,
-                         struct ScreenModeRequester *smr,
-                         ULONG mode)
-#else
 static ULONG __saveds __asm smr_filter (register __a0 struct Hook *smr_filter_hook,
                                         register __a2 struct ScreenModeRequester *smr,
                                         register __a1 ULONG mode)
-#endif
 /* reject modes deeper than depth 8 */
 /* (because setting ASLSM_MaxDepth = 8 seems to be insufficient) */
 {
@@ -241,14 +224,11 @@ void	VID_Init (unsigned char *palette)
                        BIDTAG_NominalHeight,    BASEHEIGHT,
                        BIDTAG_Depth,            8,
                        BIDTAG_DIPFMustNotHave,  propertymask,
-                       BIDTAG_MonitorID,        PAL_MONITOR_ID,
                        TAG_DONE);
   else
-    mode = PAL_MONITOR_ID;  // Default to PAL for older systems
+    mode = 0;
 
-  // Try to show screen mode requester, but if it fails (e.g., headless/emulator),
-  // just use the default mode that was calculated above
-  if (AslRequestTags (smr,
+  if (!AslRequestTags (smr,
                        ASLSM_TitleText,            (ULONG)"Quake",
                        ASLSM_InitialDisplayID,     mode,
                        ASLSM_InitialDisplayWidth,  BASEWIDTH,
@@ -269,20 +249,11 @@ void	VID_Init (unsigned char *palette)
                        ASLSM_FilterFunc,           &smr_filter_hook,
 #endif
                        TAG_END))
-  {
-    // User selected a mode via requester
-    mode = smr->sm_DisplayID;
-    width = smr->sm_DisplayWidth;
-    height = smr->sm_DisplayHeight;
-  }
-  else
-  {
-    // Requester failed (headless/emulator) - use default mode
-    Con_Printf ("Screen mode requester failed, using default mode\n");
-    width = BASEWIDTH;
-    height = BASEHEIGHT;
-    // mode already set from BestCModeIDTags/BestModeID above
-  }
+    Sys_Error ("AslRequestTags() failed");
+
+  mode = smr->sm_DisplayID;
+  width = smr->sm_DisplayWidth;
+  height = smr->sm_DisplayHeight;
 
   if ((handle = FindDisplayInfo (mode)) == NULL) {
     Sys_Error ("Can't FindDisplayInfo() for mode %08x", mode);
@@ -317,8 +288,6 @@ void	VID_Init (unsigned char *palette)
     Con_Printf (" CYBERGRAPHX");
   Con_Printf (", using size %d x %d\n", width, height);
 
-  Con_Printf ("Opening screen with mode $%08x, size %dx%d...\n", mode, width, height);
-
   if ((video_screen = OpenScreenTags (NULL,
         SA_Type,        CUSTOMSCREEN,
         SA_DisplayID,   mode,
@@ -335,14 +304,13 @@ void	VID_Init (unsigned char *palette)
     Sys_Error ("OpenScreen() failed");
   }
 
-  Con_Printf ("Screen opened successfully\n");
-
   idcmp = IDCMP_RAWKEY;
   flags = WFLG_ACTIVATE | WFLG_BORDERLESS | WFLG_NOCAREREFRESH |
           WFLG_SIMPLE_REFRESH;
-  // NovaCoder's input code always uses mouse
-  idcmp |= IDCMP_MOUSEBUTTONS | IDCMP_DELTAMOVE | IDCMP_MOUSEMOVE;
-  flags |= WFLG_RMBTRAP | WFLG_REPORTMOUSE;
+  if (using_mouse) {
+    idcmp |= IDCMP_MOUSEBUTTONS | IDCMP_DELTAMOVE | IDCMP_MOUSEMOVE;
+    flags |= WFLG_RMBTRAP | WFLG_REPORTMOUSE;
+  }
   if ((video_window = OpenWindowTags (NULL,
         WA_Left,         0,
         WA_Top,          0,
@@ -354,15 +322,6 @@ void	VID_Init (unsigned char *palette)
         TAG_DONE,        0)) == NULL) {
     Sys_Error ("OpenWindow() failed");
   }
-
-  Con_Printf ("Window opened successfully\n");
-
-  // Bring screen and window to front so they're visible
-  ScreenToFront (video_screen);
-  WindowToFront (video_window);
-  ActivateWindow (video_window);
-  Con_Printf ("Screen brought to front\n");
-
   if (!COM_CheckParm ("-mousepointer")) {
     if ((emptypointer = AllocVec (16, MEMF_CHIP | MEMF_CLEAR)) == NULL)
       Sys_Error ("Couldn't allocate chip memory for pointer");
@@ -442,8 +401,6 @@ void	VID_Init (unsigned char *palette)
   VID_SetPalette (palette);
 
   do_fps = COM_CheckParm("-fps");
-
-  Con_Printf ("VID_Init completed successfully\n");
 }
 
 /**********************************************************************/
@@ -451,6 +408,7 @@ void	VID_Shutdown (void)
 {
   int d;
 
+//  printf ("VID_Shutdown\n");
   VID_UnlockBuffer ();
   if (surfcache != NULL) {
     free (surfcache);
@@ -506,14 +464,16 @@ void	VID_Shutdown (void)
     CloseLibrary (AslBase);
     AslBase = NULL;
   }
-  if (CyberGfxBase != NULL) {
+  if (CyberGfxBase == NULL) {
     CloseLibrary (CyberGfxBase);
     CyberGfxBase = NULL;
   }
 #ifndef __PPC__
   if (!timerclosed) {
-    // GCC build uses stub timer implementation, so don't try to abort/wait for IO
-    // Just close the device directly
+    if (!CheckIO((struct IORequest *)timerio)) {
+      AbortIO ((struct IORequest *)timerio);
+      WaitIO ((struct IORequest *)timerio);
+    }
     CloseDevice ((struct IORequest *)timerio);
     timerclosed = TRUE;
     TimerBase = NULL;
@@ -828,8 +788,6 @@ extern void (*vid_menudrawfn)(void);
 extern void (*vid_menukeyfn)(int key);
 
 /**********************************************************************/
-// NOTE: Sys_SendKeyEvents() moved to sys_amiga.c in NovaCoder's version
-#if 0
 void Sys_SendKeyEvents(void)
 {
   ULONG class;
@@ -896,8 +854,8 @@ void Sys_SendKeyEvents(void)
           break;
         case IDCMP_MOUSEMOVE:
         case IDCMP_DELTAMOVE:
-          mouseX = mousex;
-          mouseY = mousey;
+          last_mouse[0] = mousex;
+          last_mouse[1] = mousey;
           mouse_has_moved = true;
           break;
         default:
@@ -906,7 +864,6 @@ void Sys_SendKeyEvents(void)
     }
   }
 }
-#endif  // Sys_SendKeyEvents moved to sys_amiga.c
 
 /**********************************************************************/
 #if 0

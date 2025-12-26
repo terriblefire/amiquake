@@ -59,7 +59,7 @@ void SV_Init (void)
 	Cvar_RegisterVariable (&sv_nostep);
 
 	for (i=0 ; i<MAX_MODELS ; i++)
-		sprintf (localmodels[i], "*%i", i);
+		sprintf (localmodels[i], "*%ld", i);
 }
 
 /*
@@ -124,13 +124,13 @@ void SV_StartSound (edict_t *entity, int channel, char *sample, int volume,
 	int			ent;
 	
 	if (volume < 0 || volume > 255)
-		Sys_Error ("SV_StartSound: volume = %i", volume);
+		Sys_Error ("SV_StartSound: volume = %ld", volume);
 
 	if (attenuation < 0 || attenuation > 4)
 		Sys_Error ("SV_StartSound: attenuation = %f", attenuation);
 
 	if (channel < 0 || channel > 7)
-		Sys_Error ("SV_StartSound: channel = %i", channel);
+		Sys_Error ("SV_StartSound: channel = %ld", channel);
 
 	if (sv.datagram.cursize > MAX_DATAGRAM-16)
 		return;	
@@ -192,7 +192,7 @@ void SV_SendServerinfo (client_t *client)
 	char			message[2048];
 
 	MSG_WriteByte (&client->message, svc_print);
-	sprintf (message, "%c\nVERSION %4.2f SERVER (%i CRC)", 2, VERSION, pr_crc);
+	sprintf (message, "%c\nVERSION %4.2f SERVER (%ld CRC)", 2, VERSION, pr_crc);
 	MSG_WriteString (&client->message,message);
 
 	MSG_WriteByte (&client->message, svc_serverinfo);

@@ -401,9 +401,9 @@ void Con_Printf (char *fmt, ...)
 	va_start (argptr,fmt);
 	vsprintf (msg,fmt,argptr);
 	va_end (argptr);
-	
+
 // also echo to debugging console
-	Sys_Printf ("%s", msg);	// also echo to debugging console
+	Sys_Printf ("%s", msg);
 
 // log all messages to file
 	if (con_debuglog)

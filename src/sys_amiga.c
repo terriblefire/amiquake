@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2000 Peter McGavin.
+Copyright (C) 1996-1997 Id Software, Inc.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -18,230 +18,72 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-/* the SAS/C __AMIGADATE__ macro appears to have broken from 1st Jan 2000 */
-#ifdef __PPC__
-#ifdef __STORM__
-const char amigaversion[] = "$VER: awinquakewos 0.9 (12.3.100)\n";
-#elif __VBCC__
-const char amigaversion[] = "$VER: awinquakevbcc 0.9 (12.3.100)\n"; // __AMIGADATE__ ;
-#else
-const char amigaversion[] = "$VER: awinquakeppc 0.9 (12.3.100)\n"; // __AMIGADATE__ ;
-#endif
-#else
-const char amigaversion[] = "$VER: awinquake 0.9 (12.3.100)\n"; // __AMIGADATE__ ;
-#endif
-
-#ifdef __SASC
-//long __oslibversion = 38;	/* we require at least OS3.0 for LoadRGB32() */
-//char __stdiowin[] = "CON:20/50/600/130/awinquake";
-//char __stdiov37[] = "/AUTO/CLOSE/WAIT";
-//long __stack = 500000;  /* increase stack size to at least 500000 bytes */
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#ifdef __SASC
-#include <dos.h>
-#endif
-
-#ifndef __PPC__
-#include <time.h>
-#endif
-
-#ifdef __PPC__
-#include <exec/types.h>
-#if defined(__STORM__) || defined(__VBCC__)
-#include <powerpc/powerpc.h>
-#include <clib/exec_protos.h>
-#include <clib/powerpc_protos.h>
-#endif
-#ifdef __SASC
-#include <PowerUP/ppclib/ppc.h>
-#include <proto/exec.h>
-#endif
-#endif
+char *ID = "$VER: AmiQuake 1.22\r\n";  
 
 #include "quakedef.h"
-#include "errno.h"
 
-#ifdef __PPC__
-#include "amiga_timer.h"
-#endif
 
+
+// Amiga includes.
+#include <proto/exec.h>
+#include <proto/dos.h>
+
+#include <clib/icon_protos.h>
+#include <workbench/startup.h>
+
+
+// External video window from vid_amiga.c
+extern struct Window *video_window;
+
+// Dedicated server flag (not used on Amiga but needed for host.c)
 qboolean isDedicated = FALSE;
 
-#ifdef __PPC__
-static int cpu_type;
-static int bus_clock;
-static int bus_MHz;
-static double clocks2secs;
+// Mouse stuff.
+int mouseX = 0;
+int mouseY = 0;
+qboolean mouse_has_moved = false;
+
+#define RAWKEY_NM_WHEEL_UP      0x7A
+#define RAWKEY_NM_WHEEL_DOWN    0x7B
+
+
+static quakeparms_t quakeparms; 
+ 
+
+
+static int myArgc = 0;
+static char	*myArgv[MAX_NUM_ARGVS];
+
+static int wbClosed = 0;
+
+
+
+#ifndef NDEBUG
+static int debugFileHandle = 0;
+
+void Sys_Printf (char *message, ...)
+{
+	va_list		argptr;
+	char		text[1024];
+
+    va_start (argptr, message);
+    vsprintf (text, message, argptr);
+    va_end (argptr);
+
+    if (!debugFileHandle) {
+        debugFileHandle = Sys_FileOpenWrite("DEBUG.TXT");
+    }
+
+    if (debugFileHandle) {
+    	Sys_FileWrite(debugFileHandle, text, strlen(text));
+    }
+}
 #endif
 
-/*
-===============================================================================
 
-FILE IO
+void IN_MLookDown (void);
 
-===============================================================================
-*/
-
-#define	MAX_HANDLES		10
-FILE	*sys_handles[MAX_HANDLES];
-
-int		findhandle (void)
-{
-	int		i;
-	
-	for (i=1 ; i<MAX_HANDLES ; i++)
-		if (!sys_handles[i])
-			return i;
-	Sys_Error ("out of handles");
-	return -1;
-}
-
-/*
-================
-filelength
-================
-*/
-int filelength (FILE *f)
-{
-	int		pos;
-	int		end;
-
-	pos = ftell (f);
-	fseek (f, 0, SEEK_END);
-	end = ftell (f);
-	fseek (f, pos, SEEK_SET);
-
-	return end;
-}
-
-int Sys_FileOpenRead (char *path, int *hndl)
-{
-	FILE	*f;
-	int		i;
-	
-	i = findhandle ();
-
-	printf ("Opening '%s' for read\n", path);
-	f = fopen(path, "rb");
-	if (!f)
-	{
-		*hndl = -1;
-		return -1;
-	}
-	sys_handles[i] = f;
-	*hndl = i;
-	
-	return filelength(f);
-}
-
-int Sys_FileOpenWrite (char *path)
-{
-	FILE	*f;
-	int		i;
-	
-	i = findhandle ();
-
-	printf ("Opening '%s' for write\n", path);
-	f = fopen(path, "wb");
-	if (!f)
-		Sys_Error ("Error opening %s: %s", path,strerror(errno));
-	sys_handles[i] = f;
-	
-	return i;
-}
-
-void Sys_FileClose (int handle)
-{
-	fclose (sys_handles[handle]);
-	sys_handles[handle] = NULL;
-}
-
-void Sys_FileSeek (int handle, int position)
-{
-	/* printf ("%d: Seeking to %d\n", handle, position); */
-	if (fseek (sys_handles[handle], position, SEEK_SET) == -1)
-		Sys_Error ("Error in fseek()");
-}
-
-int Sys_FileRead (int handle, void *dest, int count)
-{
-	/* printf ("%d: Reading %d to %08x\n", handle, count, dest); */
-	return (int)fread (dest, 1, count, sys_handles[handle]);
-}
-
-int Sys_FileWrite (int handle, void *data, int count)
-{
-	return (int)fwrite (data, 1, count, sys_handles[handle]);
-}
-
-int	Sys_FileTime (char *path)
-{
-	FILE	*f;
-	
-	f = fopen(path, "rb");
-	if (f)
-	{
-		fclose(f);
-		return 1;
-	}
-	
-	return -1;
-}
-
-void Sys_mkdir (char *path)
-{
-}
-
-
-/*
-===============================================================================
-
-SYSTEM IO
-
-===============================================================================
-*/
-
-void Sys_MakeCodeWriteable (unsigned long startaddr, unsigned long length)
-{
-}
-
-
-void Sys_DebugLog(char *file, char *fmt, ...)
-{
-}
-
-void Sys_Error (char *error, ...)
-{
-	va_list		argptr;
-
-	printf ("Sys_Error: ");	
-	va_start (argptr,error);
-	vprintf (error,argptr);
-	va_end (argptr);
-	printf ("\n");
-
-	exit (20);
-}
-
-void Sys_Printf (char *fmt, ...)
-{
-	va_list		argptr;
-	
-	va_start (argptr,fmt);
-	if (!con_initialized)
-	  vprintf (fmt,argptr);
-	va_end (argptr);
-}
-
-void Sys_Quit (void)
-{
-	exit (0);
-}
-
+// Timer functions from original awinquake
 double Sys_FloatTime (void)
 {
 #ifndef __PPC__
@@ -275,12 +117,6 @@ void Sys_Sleep (void)
 {
 }
 
-/*
-void Sys_SendKeyEvents (void)
-{
-}
-*/
-
 void Sys_HighFPPrecision (void)
 {
 }
@@ -289,242 +125,286 @@ void Sys_LowFPPrecision (void)
 {
 }
 
-//=============================================================================
+static void Sys_Init(void) {
 
-int main (int argc, char **argv)
+    // Allocate memory.
+    quakeparms.memsize = 16*1024*1024;
+    
+    // alloc 16-byte aligned quake memory
+    quakeparms.memsize = (quakeparms.memsize+15)&~15;
+	quakeparms.membase = malloc(quakeparms.memsize);
+	if (!quakeparms.membase) {
+		Sys_Error ("Not enough memory free\n");
+    }
+    
+    // Mouse look by default.
+    IN_MLookDown();
+}
+
+void Sys_Quit(void) {
+    
+	Host_Shutdown();
+        	
+	if (quakeparms.membase) {
+        free(quakeparms.membase);
+        quakeparms.membase = NULL;
+    }
+    
+#ifndef NDEBUG
+    if (debugFileHandle) {
+    	Sys_FileClose(debugFileHandle);
+    }
+#endif    
+
+	if (wbClosed) {
+        OpenWorkBench();
+    }
+    
+	exit(EXIT_SUCCESS);	
+}
+ 
+
+void Sys_Error (char *error, ...)
 {
-  int j;
-  double time, oldtime, newtime;
-  quakeparms_t parms;
+	va_list		argptr;
+	char		text[1024];
+	int errorFileHandle;
 
-//  printf ("Stack size is %d\n", stacksize());
+    
+    va_start (argptr, error);
+    vsprintf (text, error, argptr);
+    va_end (argptr);
 
-  memset (&parms, 0, sizeof(parms));
-
-  COM_InitArgv (argc, argv);
-
-  parms.memsize = 8*1024*1024;
-  j = COM_CheckParm("-mem");
-  if (j)
-    parms.memsize = (int) (Q_atof(com_argv[j+1]) * 1024 * 1024);
-
-  if ((parms.membase = malloc (parms.memsize)) == NULL)
-    Sys_Error ("Can't allocate %d bytes", parms.memsize);
-//  parms.basedir = "QUAKE:";
-//  parms.basedir = "";
-  parms.basedir = "PROGDIR:";
-  parms.cachedir = "";
-
-  parms.argc = com_argc;
-  parms.argv = com_argv;
-
-#ifdef __PPC__
-
-#ifdef __SASC
-  {
-  int i;
-  ULONG ipll, ipll2;
-  double pll;
-
-  cpu_type = PPCGetAttr (PPCINFOTAG_CPU);
-  switch (cpu_type) {
-    case 3:
-      printf ("\nCPU is PPC603 ");
-      break;
-    case 4:
-      printf ("\nCPU is PPC604 ");
-      break;
-    case 5:
-      printf ("\nCPU is PPC602 ");
-      break;
-    case 6:
-      printf ("\nCPU is PPC603e ");
-      break;
-    case 7:
-      printf ("\nCPU is PPC603e+ ");
-      break;
-    case 9:
-      printf ("\nCPU is PPC604e ");
-      break;
-    default:
-      printf ("\nCPU is PPC ");
-      break;
-  }
-
-  bus_clock = PPCGetAttr (PPCINFOTAG_CPUCLOCK);
-  printf ("running at %d MHz ", bus_clock);
-  if (!bus_clock)
-    bus_clock = 233333333;
-  else
-    bus_clock = bus_clock * 1000000;
-  ipll = PPCGetAttr (PPCINFOTAG_CPUPLL);
-  if ((ipll & 0xf0000000) && !(ipll & 0x0ffffff0))
-    ipll2 = ipll >> 28;     /* work around bug in ppc.library */
-  else
-    ipll2 = ipll & 0x0000000f;
-  switch (ipll2) {    /* see http://mx1.xoom.com/silicon/docs/ppc_pll.html */
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-      pll = 1.0;			// PLL is 1:1 (or bypassed)
-      break;
-    case 4:
-    case 5:
-      pll = 2.0;			// PLL is 2:1
-      break;
-    case 6:
-      pll = 2.5;
-      break;
-    case 7:
-      pll = 4.5;
-      break;
-    case 8:
-    case 9:
-      pll = 3.0;			// PLL is 3:1
-      break;
-    case 10:
-      pll = 4.0;
-      break;
-    case 11:
-      pll = 5.0;
-      break;
-    case 12:
-      if ((cpu_type == 4) || (cpu_type == 8))
-        pll = 1.5;			// PLL is 1.5:1
-      else
-        pll = 4.0;			// PLL is 4:1
-      break;
-    case 13:
-      pll = 6.0;			// PLL is 6:1
-      break;
-    case 14:
-      pll = 3.5;			// PLL is 3.5:1
-      break;
-    default:
-      pll = 3.0;
-      break;
-  }
-  printf ("using a PLL divisor of %3.1f.  (%08x)\n", pll, ipll);
-
-  i = COM_CheckParm ("-bus");
-  if (i && i < com_argc-1) {
-    bus_clock = atoi(com_argv[i+1]);
-  } else {
-    bus_clock = (int)((double)bus_clock / pll);
-  }
-
-  bus_MHz = bus_clock / 1000000;
-  printf("Bus clock is %d MHz.\n\n", bus_MHz);
-
-  clocks2secs = 4.0 / bus_clock;
-  }
-#endif /* __SASC */
-
-#if defined(__STORM__) || defined(__VBCC__)
-  {
-    struct TagItem ti_cputype[] = {{GETINFO_CPU, 0}, {TAG_END, 0}};
-    struct TagItem ti_cpuclock[] = {{GETINFO_CPUCLOCK, 0}, {TAG_END, 0}};
-    struct TagItem ti_busclock[] = {{GETINFO_BUSCLOCK, 0}, {TAG_END, 0}};
-
-    GetInfo (ti_cputype);
-    cpu_type = ti_cputype[0].ti_Data;
-    switch (cpu_type) {
-      case CPUF_603:
-        printf ("\nCPU is PPC603 ");
-        break;
-      case CPUF_604:
-        printf ("\nCPU is PPC604 ");
-        break;
-      case CPUF_603E:
-        printf ("\nCPU is PPC603e ");
-        break;
-      case CPUF_604E:
-        printf ("\nCPU is PPC604e ");
-        break;
-      case CPUF_620:
-        printf ("\nCPU is PPC620 ");
-        break;
-      default:
-        printf ("\nCPU is PPC ");
-        break;
+    errorFileHandle = Sys_FileOpenWrite("ERROR.TXT");
+    if (errorFileHandle) {
+    	Sys_FileWrite(errorFileHandle, text, strlen(text));
+    	Sys_FileClose(errorFileHandle);
     }
 
-    GetInfo (ti_cpuclock);
-    bus_clock = ti_cpuclock[0].ti_Data;
-    printf ("running at %d MHz\n", bus_clock / 1000000);
+	Host_Shutdown();
+	
+	if (quakeparms.membase) {
+        free(quakeparms.membase);
+        quakeparms.membase = NULL;
+    }	
 
-    GetInfo (ti_busclock);
-    bus_clock = ti_busclock[0].ti_Data;
-    bus_MHz = bus_clock / 1000000;
-    printf("Bus clock is %d MHz.\n\n", bus_MHz);
+	if (wbClosed) {
+        OpenWorkBench();
+    }
+    
+	exit(EXIT_FAILURE);
+}
 
-    clocks2secs = 4.0 / bus_clock;
 
+
+static int xlate[0x68] = {
+    '`', '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', '0', '-', '=', '\\', 0, '0',
+    'q', 'w', 'e', 'r', 't', 'y', 'u', 'i',
+    'o', 'p', K_F11, K_F12, 0, '0', '2', '3',
+    'a', 's', 'd', 'f', 'g', 'h', 'j', 'k',
+    'l', ';', '\'', K_ENTER, 0, '4', '5', '6',
+    K_SHIFT, 'z', 'x', 'c', 'v', 'b', 'n', 'm',
+    ',', '.', '/', 0, '.', '7', '8', '9',
+    K_SPACE, K_BACKSPACE, K_TAB, K_ENTER, K_ENTER, K_ESCAPE, K_F11,
+    0, 0, 0, '-', 0, K_UPARROW, K_DOWNARROW, K_RIGHTARROW, K_LEFTARROW,
+    K_F1, K_F2, K_F3, K_F4, K_F5, K_F6, K_F7, K_F8,
+    K_F9, K_F10, '(', ')', '/', '*', '=', K_PAUSE,
+    K_SHIFT, K_SHIFT, 0, K_CTRL, K_ALT, K_ALT, 0, K_CTRL
+};
+    
+
+void Sys_SendKeyEvents(void) {
+    
+  ULONG class;
+  UWORD code;
+  WORD mousex, mousey;
+  struct IntuiMessage *msg;
+
+
+  if (video_window != NULL) {
+    while ((msg = (struct IntuiMessage *)GetMsg (video_window->UserPort)) != NULL) {
+        ReplyMsg ((struct Message *)msg);
+            
+        class = msg->Class;
+        code = msg->Code;
+
+        switch (class) {
+        case IDCMP_RAWKEY:
+            switch (code) {
+                case RAWKEY_NM_WHEEL_UP:
+                	Key_Event(K_MWHEELUP, true);
+                	Key_Event(K_MWHEELUP, false);
+                	break;
+                
+                case RAWKEY_NM_WHEEL_DOWN:
+                	Key_Event(K_MWHEELDOWN, true);
+                	Key_Event(K_MWHEELDOWN, false);
+                	break;
+                
+                default:
+                    if (code & IECODE_UP_PREFIX) {
+                		Key_Event(xlate[code & ~IECODE_UP_PREFIX], false);
+                	} else {
+                		Key_Event(xlate[code], true);
+                	}
+                    break;
+            }         
+            break;
+          
+        case IDCMP_MOUSEBUTTONS:
+          switch (code) {
+            case IECODE_LBUTTON:
+              Key_Event (K_MOUSE1, true);
+              break;
+            case IECODE_LBUTTON + IECODE_UP_PREFIX:
+              Key_Event (K_MOUSE1, false);
+              break;
+            case IECODE_MBUTTON:
+              Key_Event (K_MOUSE2, true);
+              break;
+            case IECODE_MBUTTON + IECODE_UP_PREFIX:
+              Key_Event (K_MOUSE2, false);
+              break;
+            case IECODE_RBUTTON:
+              Key_Event (K_MOUSE3, true);
+              break;
+            case IECODE_RBUTTON + IECODE_UP_PREFIX:
+              Key_Event (K_MOUSE3, false);
+              break;
+            default:
+              break;
+          }
+          break;
+          
+        case IDCMP_MOUSEMOVE:
+          mouseX = msg->MouseX;
+          mouseY = msg->MouseY;
+          mouse_has_moved = true;
+          break;
+          
+        default:
+          break;
+        }
+    }
   }
+}
 
-#endif /* __STORM__ */
+ 
+//=============================================================================
 
-#endif /* __PPC__ */
 
-//	printf ("Host_Init\n");
-	Host_Init (&parms);
 
-//	while (1)
-//	{
-//		Host_Frame ((float)0.1);
-//	}
+/* these command line arguments are flags */
+static char *flags[] = {
+    "-nosound",
+    "-condebug",
+    "-rogue",
+    "-hipnotic"               
+};
 
-	oldtime = Sys_FloatTime ();
-	while (1)
-	{
-#ifdef __SASC
-		chkabort ();
-#endif
-		newtime = Sys_FloatTime ();
-		time = newtime - oldtime;
 
-		if (time < 0.0)
-			printf ("Negative time = %f!!\n", time);
+/* these command line arguments each take a value */
+static char *settings[] = {
+    "-game"
+};
 
-		if (cls.state == ca_dedicated && (time<sys_ticrate.value))
-			continue;
+static void RunGameLoop(void)
+{
+    float newtime;
+    float oldtime;
+        
+    // Never exits
+    oldtime = Sys_FloatTime();
+    while (true) {
+        newtime = Sys_FloatTime();
 
-		Host_Frame ((float)time);
+        Host_Frame(newtime - oldtime);
 
-		oldtime = newtime;
+        oldtime = newtime;
 	}
-	return 0;
 }
 
-/**********************************************************************/
-#ifdef __SASC
-void _STD_Host_Shutdown (void)
-{
-//  printf ("_STD_Host_Shutdown\n");
-  S_Shutdown();
-  Host_Shutdown ();
-}
-#endif
 
-/**********************************************************************/
-#ifdef __STORM__
-void EXIT_9_Host_Shutdown (void)
-{
-//  printf ("EXIT_9_Host_Shutdown\n");
-  S_Shutdown();
-  Host_Shutdown ();
-}
-#endif
+int main(int argcWb, char *argvWb[]) {
+	char path[MAX_OSPATH];
+    struct DiskObject *diskObject;
+    char *toolType;
+    int i;
+    struct WBStartup* wbStartup;
+    int closeWb = 0;
 
-/**********************************************************************/
-#ifdef __VBCC__
-void _EXIT_9_Host_Shutdown (void)
-{
-//  printf ("_EXIT_9_Host_Shutdown\n");
-  S_Shutdown();
-  Host_Shutdown ();
-}
-#endif
 
-/**********************************************************************/
+    // Setup the system (allocate memory, enable mouselook).
+    Sys_Init();
+
+
+    // Check if started from shell or Workbench
+    if (argcWb != 0) {
+        // Started from the shell - use standard argc/argv
+        COM_InitArgv(argcWb, argvWb);
+        quakeparms.basedir = "";
+        quakeparms.cachedir = NULL;
+        quakeparms.argc = com_argc;
+        quakeparms.argv = com_argv;
+    } else {
+        // Started from Workbench - process tooltypes
+        wbStartup = (struct WBStartup*)argvWb;
+
+        // Set the current directory.
+        NameFromLock(wbStartup->sm_ArgList[0].wa_Lock, path, MAX_OSPATH);
+        CurrentDir(wbStartup->sm_ArgList[0].wa_Lock);
+        quakeparms.basedir = path;
+        quakeparms.cachedir = NULL;
+
+        // Setup command line.
+        myArgv[myArgc++] = "AmiQuake";
+
+        // Process Tooltypes.
+        diskObject = GetDiskObject((char*)wbStartup->sm_ArgList[0].wa_Name);
+
+        if (diskObject != NULL) {
+            toolType = (char*)FindToolType(diskObject->do_ToolTypes, "CLOSE_WB");
+            if (toolType != NULL) {
+                closeWb = 1;
+            }
+
+            // Process DOS command line flags.
+            for (i = 0; i < sizeof(flags)/sizeof(flags[0]); i++) {
+                if (FindToolType(diskObject->do_ToolTypes, &flags[i][1]) != NULL) {
+                    myArgv[myArgc++] = flags[i];
+                }
+            }
+
+            // Process DOS command line settings.
+            for (i = 0; i < sizeof(settings)/sizeof(settings[0]); i++) {
+                if ((toolType = FindToolType (diskObject->do_ToolTypes, &settings[i][1])) != NULL) {
+                    myArgv[myArgc++] = settings[i];
+                    myArgv[myArgc] = malloc(strlen(toolType)+1);
+                    strcpy(myArgv[myArgc++], toolType);
+                }
+            }
+        }
+
+        // Close WB if requested.
+        if (closeWb) {
+            wbClosed = CloseWorkBench();
+        }
+
+        COM_InitArgv(myArgc, myArgv);
+
+        quakeparms.argc = myArgc;
+        quakeparms.argv = myArgv;
+    }
+    
+    // Setup the host.
+	Host_Init(&quakeparms);
+
+
+    // Never returns.
+    RunGameLoop();
+
+    
+    // Keep compiler happy!    
+    return EXIT_SUCCESS;
+}

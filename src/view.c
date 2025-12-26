@@ -268,14 +268,14 @@ float		v_blend[4];		// rgba 0.0 - 1.0
 void BuildGammaTable (float g)
 {
 	int		i, inf;
-	
+
 	if (g == 1.0)
 	{
 		for (i=0 ; i<256 ; i++)
 			gammatable[i] = i;
 		return;
 	}
-	
+
 	for (i=0 ; i<256 ; i++)
 	{
 		inf = 255 * pow ( (i+0.5)/255.5 , g ) + 0.5;
