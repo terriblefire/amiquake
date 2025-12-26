@@ -27,12 +27,31 @@ This is a port of AmiQuake (based on awinquake 0.9) compiled with modern GCC m68
 
 ## Building
 
+### Local Build
+
 ```bash
 make clean
 make
 ```
 
 The binary will be created at `build/AmiQuake_gcc`.
+
+### Docker Build
+
+For a reproducible build environment using Docker:
+
+```bash
+docker run --rm -v $(pwd):/work -w /work amigadev/crosstools:m68k-amigaos make clean
+docker run --rm -v $(pwd):/work -w /work amigadev/crosstools:m68k-amigaos make
+```
+
+Or as a single command:
+
+```bash
+docker run --rm -v $(pwd):/work -w /work amigadev/crosstools:m68k-amigaos sh -c "make clean && make"
+```
+
+The Docker build uses the same toolchain as the GitHub Actions CI.
 
 ### Build Configuration
 
