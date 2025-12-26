@@ -135,8 +135,22 @@ Cvar_SetValue
 void Cvar_SetValue (char *var_name, float value)
 {
 	char	val[32];
-	
-	sprintf (val, "%f",value);
+	int		intpart;
+	int		fracpart;
+
+	// AmigaOS sprintf doesn't support %f, so convert manually
+	intpart = (int)value;
+	fracpart = (int)((value - intpart) * 1000000);  // 6 decimal places
+
+	if (fracpart < 0)
+		fracpart = -fracpart;
+
+	// Remove trailing zeros for cleaner output
+	if (fracpart == 0)
+		sprintf(val, "%ld", (long)intpart);
+	else
+		sprintf(val, "%ld.%06ld", (long)intpart, (long)fracpart);
+
 	Cvar_Set (var_name, val);
 }
 
