@@ -248,7 +248,8 @@ void	VID_Init (unsigned char *palette)
 
   // Try to show screen mode requester, but if it fails (e.g., headless/emulator),
   // just use the default mode that was calculated above
-  if (AslRequestTags (smr,
+  // Skip requester on RTG systems - auto-detected mode works fine
+  if (CyberGfxBase == NULL && AslRequestTags (smr,
                        ASLSM_TitleText,            (ULONG)"Quake",
                        ASLSM_InitialDisplayID,     mode,
                        ASLSM_InitialDisplayWidth,  BASEWIDTH,
