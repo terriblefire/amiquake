@@ -1,5 +1,7 @@
 # AmiQuake GCC Port
 
+[![Build AmiQuake](https://github.com/terriblefire/amiquake/actions/workflows/build.yml/badge.svg)](https://github.com/terriblefire/amiquake/actions/workflows/build.yml)
+
 GCC/m68k port of AmiQuake with NovaCoder's optimized C2P implementation extracted from the original binary.
 
 ## Overview
@@ -34,7 +36,7 @@ make clean
 make
 ```
 
-The binary will be created at `build/AmiQuake_gcc`.
+The binaries will be created at `build/AmiQuakeGCC` (FPU version) and `build/AmiQuakeGCC-NoFPU` (soft-float version).
 
 ### Docker Build
 
