@@ -21,6 +21,24 @@ This is a port of AmiQuake (based on awinquake 0.9) compiled with modern GCC m68
 - ✅ Fixed GCC optimizer bugs breaking viewport angle calculations
 - ✅ Gamma correction working correctly
 
+## Recent Improvements (v1.0)
+
+### RTG Graphics Card Support
+- **Fixed screen mode requester issue on RTG systems** - Empty requester no longer appears when CyberGraphX is detected
+- RTG systems now use auto-detected mode directly via `BestCModeIDTags()`
+- Clicking OK on empty requester no longer crashes the game
+- Native AGA systems continue to show the mode requester as before
+
+### File Loading Improvements
+- **PROGDIR: support** - Game now loads data files from executable's directory when launched from CLI
+- Previously required running from the game directory; now works from any location
+- Workbench launching already worked correctly, now CLI launching matches this behavior
+
+### Icon Support
+- **Amiga .info files included** - Both FPU and NoFPU executables now have proper Workbench icons
+- Icons include stack size settings and tooltypes for better Workbench integration
+- Automatically generated during build and included in release packages
+
 ## Build Requirements
 
 - m68k-amigaos-gcc toolchain (gcc 6.5.0 or later)
