@@ -355,10 +355,10 @@ int main(int argcWb, char *argvWb[]) {
         // Started from Workbench - process tooltypes
         wbStartup = (struct WBStartup*)argvWb;
 
-        // Set the current directory.
-        NameFromLock(wbStartup->sm_ArgList[0].wa_Lock, path, MAX_OSPATH);
+        // Set the current directory to the executable's directory
         CurrentDir(wbStartup->sm_ArgList[0].wa_Lock);
-        quakeparms.basedir = path;
+        // Use PROGDIR: to load files from executable's directory
+        quakeparms.basedir = "PROGDIR:";
         quakeparms.cachedir = NULL;
 
         // Setup command line.
