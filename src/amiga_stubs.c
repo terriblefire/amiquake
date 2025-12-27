@@ -3,12 +3,43 @@
 
 #include <exec/types.h>
 #include <graphics/gfx.h>
+#include <devices/timer.h>
+#include <proto/timer.h>
 
-// Timer stubs
+// Timer implementation using EClock
+#ifndef __PPC__
+extern struct Device *TimerBase;
+extern ULONG eclocks_per_second;
+#endif
+
 void timer(ULONG *clock) {
-    // Stub: Would normally read hardware timer
+#ifndef __PPC__
+    struct EClockVal eclock;
+
+    if (TimerBase != NULL && eclocks_per_second > 0) {
+        ReadEClock(&eclock);
+
+        // Convert 64-bit EClock ticks to seconds + microseconds
+        // ev_hi:ev_lo is the tick count, divide by frequency to get time
+        unsigned long long ticks = ((unsigned long long)eclock.ev_hi << 32) | eclock.ev_lo;
+        unsigned long long seconds = ticks / eclocks_per_second;
+        unsigned long long remainder = ticks % eclocks_per_second;
+        unsigned long long microseconds = (remainder * 1000000ULL) / eclocks_per_second;
+
+        clock[0] = (ULONG)seconds;
+        clock[1] = (ULONG)microseconds;
+    } else {
+        // Fallback if timer not initialized yet
+        static ULONG counter = 0;
+        clock[0] = counter++;
+        clock[1] = 0;
+    }
+#else
+    // PPC version - fallback
     static ULONG counter = 0;
-    *clock = counter++;
+    clock[0] = counter++;
+    clock[1] = 0;
+#endif
 }
 
 // C2P (Chunky to Planar) conversion functions are now provided by c2p8_040_amlaukka.s

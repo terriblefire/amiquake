@@ -83,6 +83,9 @@ void Sys_Printf (char *message, ...)
 
 void IN_MLookDown (void);
 
+// Timer function prototype (implemented in amiga_stubs.c)
+void timer(unsigned int *clock);
+
 // Timer functions from original awinquake
 double Sys_FloatTime (void)
 {

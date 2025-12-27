@@ -129,7 +129,7 @@ struct Device *TimerBase = NULL;  // Changed from Library to Device for GCC NDK 
 static struct MsgPort *timermp = NULL;
 static struct timerequest *timerio = NULL;
 static ULONG timerclosed = TRUE;
-static ULONG eclocks_per_second; /* EClock frequency in Hz */
+ULONG eclocks_per_second; /* EClock frequency in Hz - extern for timer() */
 
 void *c2p[3] = {NULL, NULL, NULL};
 void *nextc2p = NULL;
