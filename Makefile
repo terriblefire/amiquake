@@ -32,7 +32,7 @@ LIBS = -lm -lamiga
 SRCDIR = src
 
 # Output
-TARGET = build/AmiQuake_gcc
+TARGET = build/AmiQuakeGCC
 OBJDIR = obj
 
 # Source files (from OBJSGCC in smakefile)
@@ -124,8 +124,20 @@ OBJS = $(SRCS:%.c=$(OBJDIR)/%.o)
 ASMOBJS = $(ASMSRCS:%.s=$(OBJDIR)/%.o)
 ALLOBJS = $(OBJS) $(ASMOBJS)
 
-# Default target
-all: $(TARGET)
+# Default target - build both versions
+.PHONY: all fpu nofpu
+all: fpu nofpu
+
+# FPU target (68040 with FPU)
+fpu: ARCH_FLAGS = -m68040 -m68881
+fpu: TARGET = build/AmiQuakeGCC
+fpu: OBJDIR = obj
+fpu: LDFLAGS = -m68040 -m68881 -s
+fpu: $(TARGET)
+
+# NOFPU target (soft-float for 68020+ without FPU)
+nofpu:
+	@$(MAKE) build/AmiQuakeGCC-NoFPU ARCH_FLAGS="-m68020 -msoft-float" TARGET="build/AmiQuakeGCC-NoFPU" OBJDIR="obj-nofpu" LDFLAGS="-m68020 -msoft-float -s"
 
 # Create directories
 $(OBJDIR):
@@ -153,8 +165,8 @@ $(OBJDIR)/net_amigaudp.o: $(SRCDIR)/net_amigaudp.c
 
 # Clean
 clean:
-	rm -rf $(OBJDIR)
-	rm -f $(TARGET)
+	rm -rf obj obj-nofpu
+	rm -f build/AmiQuakeGCC build/AmiQuakeGCC-NoFPU
 
 # Rebuild
 rebuild: clean all
