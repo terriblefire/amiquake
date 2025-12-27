@@ -343,7 +343,8 @@ int main(int argcWb, char *argvWb[]) {
     if (argcWb != 0) {
         // Started from the shell - use standard argc/argv
         COM_InitArgv(argcWb, argvWb);
-        quakeparms.basedir = "";
+        // Use PROGDIR: to load files from executable's directory
+        quakeparms.basedir = "PROGDIR:";
         quakeparms.cachedir = NULL;
         quakeparms.argc = com_argc;
         quakeparms.argv = com_argv;
