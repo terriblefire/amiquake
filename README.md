@@ -21,20 +21,29 @@ This is a port of AmiQuake (based on awinquake 0.9) compiled with modern GCC m68
 - ✅ Fixed GCC optimizer bugs breaking viewport angle calculations
 - ✅ Gamma correction working correctly
 
-## Recent Improvements (v1.0)
+## Recent Improvements
 
-### RTG Graphics Card Support
+### v1.1 - Hardware Timer Fix
+- **Fixed timer() implementation** - Now uses hardware EClock instead of counter stub
+- Proper timing using `ReadEClock()` from timer.device (UNIT_ECLOCK)
+- Converts 64-bit EClock ticks to accurate seconds + microseconds
+- Fixes frame rate, game speed, and timing-related issues
+- Timer now properly synced to hardware instead of arbitrary increments
+
+### v1.0 - RTG Support and Quality of Life
+
+#### RTG Graphics Card Support
 - **Fixed screen mode requester issue on RTG systems** - Empty requester no longer appears when CyberGraphX is detected
 - RTG systems now use auto-detected mode directly via `BestCModeIDTags()`
 - Clicking OK on empty requester no longer crashes the game
 - Native AGA systems continue to show the mode requester as before
 
-### File Loading Improvements
-- **PROGDIR: support** - Game now loads data files from executable's directory when launched from CLI
-- Previously required running from the game directory; now works from any location
-- Workbench launching already worked correctly, now CLI launching matches this behavior
+#### File Loading Improvements
+- **PROGDIR: support for CLI launches** - Game now loads data files from executable's directory when launched from shell
+- Workbench launches use the directory lock from startup message (already worked correctly)
+- Previously required running from the game directory when using CLI; now works from any location
 
-### Icon Support
+#### Icon Support
 - **Amiga .info files included** - Both FPU and NoFPU executables now have proper Workbench icons
 - Icons include stack size settings and tooltypes for better Workbench integration
 - Automatically generated during build and included in release packages
