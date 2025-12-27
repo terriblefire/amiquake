@@ -147,6 +147,7 @@ $(OBJDIR):
 $(TARGET): $(OBJDIR) $(ALLOBJS)
 	@mkdir -p build
 	$(CC) $(LDFLAGS) -o $(TARGET) $(ALLOBJS) $(LIBS)
+	@cp icons/template.info $(TARGET).info
 	@echo "Build complete: $(TARGET)"
 
 # Compile C files

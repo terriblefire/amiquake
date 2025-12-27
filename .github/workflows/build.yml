@@ -53,7 +53,7 @@ jobs:
       run: |
         cd build
         cp ../README.md .
-        zip AmiQuake-m68k.zip AmiQuakeGCC AmiQuakeGCC-NoFPU README.md
+        zip AmiQuake-m68k.zip AmiQuakeGCC AmiQuakeGCC.info AmiQuakeGCC-NoFPU AmiQuakeGCC-NoFPU.info README.md
         ls -lh AmiQuake-m68k.zip
         cd ..
 
