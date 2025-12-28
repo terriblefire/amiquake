@@ -17,8 +17,8 @@ OPT_FLAGS = -O1 -fno-strict-aliasing
 # NOTE: Using -O1 globally due to GCC optimizer bugs (culling, FP math)
 # NOTE: cvar.c contains workaround for AmigaOS sprintf lacking %f support
 WARN_FLAGS = -Wall -Wno-unused
-DEFINES = -DAMIGA -DFALSE=0 -DTRUE=1
-# Note: id68k=1 not defined - using C implementations instead of SAS/C assembly
+DEFINES = -DAMIGA -DFALSE=0 -DTRUE=1 -DUSE_ASM_SPANS=1
+# USE_ASM_SPANS=1: Use optimized 68k assembly for span drawing (d_scan_68k.s)
 # Note: Defining FALSE/TRUE as this GCC SDK doesn't provide them
 INCLUDES = -I. -Isrc -ICDPlayerSDK
 
@@ -115,9 +115,10 @@ SRCS = \
 	zone.c
 
 # Assembly source files
-# Using NovaCoder's optimized C2P extracted from AmiQuake v1.36 binary
+# Using NovaCoder's optimized C2P and span drawing routines from AmiQuake v1.36 binary
 ASMSRCS = \
-	c2p8.s
+	c2p8.s \
+	d_scan_68k.s
 
 # Generate object file lists
 OBJS = $(SRCS:%.c=$(OBJDIR)/%.o)

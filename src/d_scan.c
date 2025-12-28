@@ -93,7 +93,7 @@ void D_WarpScreen (void)
 #endif
 
 #if	!id386
-#if !id68k
+#if !USE_ASM_SPANS
 
 /*
 =============
@@ -255,7 +255,7 @@ void Turbulent8 (espan_t *pspan)
 
 #if	!id386
 #if	!idppc
-#if !id68k
+#if !USE_ASM_SPANS
 
 
 /*
