@@ -639,21 +639,27 @@ void R_DrawViewModel (void)
 	r_viewlighting.ambientlight = j;
 	r_viewlighting.shadelight = j;
 
-// add dynamic lights		
+// add dynamic lights
 	for (lnum=0 ; lnum<MAX_DLIGHTS ; lnum++)
 	{
+		float dist_sq, radius_sq;
+
 		dl = &cl_dlights[lnum];
-		if (!dl->radius)
-			continue;
 		if (!dl->radius)
 			continue;
 		if (dl->die < cl.time)
 			continue;
 
 		VectorSubtract (currententity->origin, dl->origin, dist);
-		add = dl->radius - Length(dist);
-		if (add > 0)
+
+		// Use squared distance to avoid expensive sqrt when possible
+		dist_sq = dist[0]*dist[0] + dist[1]*dist[1] + dist[2]*dist[2];
+		radius_sq = dl->radius * dl->radius;
+
+		if (dist_sq < radius_sq) {
+			add = dl->radius - sqrt(dist_sq);
 			r_viewlighting.ambientlight += add;
+		}
 	}
 
 // clamp lighting so it doesn't overbright as much
