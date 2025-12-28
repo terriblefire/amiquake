@@ -23,12 +23,28 @@ This is a port of AmiQuake (based on awinquake 0.9) compiled with modern GCC m68
 
 ## Recent Improvements
 
-### v1.1 - Hardware Timer Fix
+### v1.1 - Hardware Timer, Basedir Fix, and Performance Optimizations
+
+#### Hardware Timer Implementation
 - **Fixed timer() implementation** - Now uses hardware EClock instead of counter stub
 - Proper timing using `ReadEClock()` from timer.device (UNIT_ECLOCK)
 - Converts 64-bit EClock ticks to accurate seconds + microseconds
 - Fixes frame rate, game speed, and timing-related issues
 - Timer now properly synced to hardware instead of arbitrary increments
+
+#### Workbench Basedir Detection
+- **Fixed PROGDIR: usage for Workbench launches** - Both CLI and Workbench now consistently use PROGDIR:
+- Removed fragile `NameFromLock()` path conversion
+- Game now loads data files correctly when launched from Workbench
+- Consistent behavior across both launch methods
+
+#### Dynamic Lighting Performance Optimization
+- **Optimized view model dynamic lighting calculations** (`src/r_main.c:642-663`)
+- Removed duplicate radius check (25+ year old bug from original Quake)
+- Implemented squared distance comparison to avoid expensive `sqrt()` calls
+- Only calls `sqrt()` when light is actually in range (dist² < radius²)
+- Performance improvement especially noticeable with multiple active dynamic lights (muzzle flashes, explosions)
+- Maintains identical visual results with better performance
 
 ### v1.0 - RTG Support and Quality of Life
 
