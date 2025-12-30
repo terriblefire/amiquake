@@ -17,6 +17,7 @@
 	XREF	_screenwidth
 	XREF	_d_pzbuffer
 	XREF	_d_zrowbytes
+	XREF	_d_zwidth
 	XREF	_d_sdivzorigin
 	XREF	_d_tdivzorigin
 	XREF	_d_ziorigin
@@ -71,16 +72,18 @@ _D_DrawSpans8:
 	fmove.s	#65536.0,fp3		; fp3 = constant for 1/z calc
 	fdiv.x	fp2,fp3			; fp3 = 65536.0 / d_zistepu
 
-	; Pre-multiply for 8-pixel stepping
-	fmul.s	#32768.0,fp2		; fp2 = d_zistepu * 8 * 65536
-
 	; Load base pointers
 	movea.l	(_cacheblock),a0	; a0 = texture base pointer
-	movea.l	(_d_viewbuffer),a4	; a4 = end of valid range (bounds check)
-	movea.l	(_d_pzbuffer),a5	; a5 = start of valid range
 
-	; Convert fp2 to integer for z-buffer stepping
-	fmove.l	fp2,d6			; d6 = z step value
+	; Pre-multiply for z-buffer (matches Ghidra @ 003746dc)
+	fmul.s	#32768.0,fp2		; fp2 = d_zistepu * 32768.0
+
+	; Load bounds for coordinate clamping (matches Ghidra @ 003746e4-003746ea)
+	movea.l	(_bbextents),a4		; a4 = bbextents (max S coordinate)
+	movea.l	(_sadjust),a5		; a5 = sadjust (S offset)
+
+	; Convert izi step to integer (matches Ghidra @ 003746f0)
+	fmove.l	fp2,d6			; d6 = izistep for z-buffer
 
 .span_loop:
 	; Get span pixel count
@@ -112,15 +115,16 @@ _D_DrawSpans8:
 	; Calculate t/z
 	fmove.s	(_d_tdivzstepu),fp1
 	fmul.x	fp4,fp1			; fp1 = u * d_tdivzstepu
+	move.l	d1,d2			; d2 = v (for z-buffer calc)
 	fmove.s	(_d_tdivzstepv),fp2
 	fmul.x	fp5,fp2			; fp2 = v * d_tdivzstepv
 
-	; Calculate z-buffer pointer: d_pzbuffer + v*d_zrowbytes + u*2
+	; Calculate z-buffer pointer: d_pzbuffer + (v*d_zwidth + u)*2 (matches Ghidra @ 0037475a-00374786)
 	movea.l	(_d_pzbuffer),a2	; a2 = z-buffer base
-	move.l	d1,d2
-	mulu.l	(_d_zrowbytes),d2	; d2 = v * d_zrowbytes
-	add.l	d0,d2
-	add.l	d2,d2			; *2 for word addressing
+	mulu.l	(_d_zwidth),d2		; d2 = v * d_zwidth
+	moveq	#-1,d1			; d1 = -1 for transparency check later
+	add.l	d0,d2			; d2 = v * d_zwidth + u
+	add.l	d2,d2			; d2 *= 2 (word offset)
 	adda.l	d2,a2			; a2 = z-buffer pointer
 
 	fadd.x	fp2,fp1			; fp1 = u*d_tdivzstepu + v*d_tdivzstepv
@@ -150,9 +154,17 @@ _D_DrawSpans8:
 	fmove.l	fp0,d2			; d2 = s (16.16)
 	add.l	(_sadjust),d2
 
-	; Clamp s to texture bounds
-	move.l	(_bbextents),d0
-	clamp_coord d2,d0,0
+	; Clamp s to texture bounds (A4 = bbextents)
+	move.l	a4,d0
+	cmp.l	d0,d2
+	ble.s	.s_ok
+	move.l	d0,d2
+	bra.s	.s_clamped
+.s_ok:
+	tst.l	d2
+	bpl.s	.s_clamped
+	moveq	#0,d2
+.s_clamped:
 
 	; Calculate t = (int)(tdivz * z) + tadjust
 	fmove.s	(_d_tdivzstepu),fp0
@@ -165,9 +177,17 @@ _D_DrawSpans8:
 	fmove.l	fp0,d3			; d3 = t (16.16)
 	add.l	(_tadjust),d3
 
-	; Clamp t to texture bounds
-	move.l	(_bbextentt),d0
-	clamp_coord d3,d0,0
+	; Clamp t to texture bounds (A5 = bbextentt)
+	move.l	a5,d0
+	cmp.l	d0,d3
+	ble.s	.t_ok
+	move.l	d0,d3
+	bra.s	.t_clamped
+.t_ok:
+	tst.l	d3
+	bpl.s	.t_clamped
+	moveq	#0,d3
+.t_clamped:
 
 	; Calculate next s,t for 8 pixels ahead
 	fmove.s	(_d_sdivzstepu),fp5
@@ -185,8 +205,8 @@ _D_DrawSpans8:
 	fmove.l	fp0,d4			; d4 = snext
 	add.l	(_sadjust),d4
 
-	; Clamp snext
-	move.l	(_bbextents),d0
+	; Clamp snext (A4 = bbextents)
+	move.l	a4,d0
 	cmp.l	d0,d4
 	ble.s	.snext_ok
 	move.l	d0,d4
@@ -221,21 +241,21 @@ _D_DrawSpans8:
 	add.w	d1,d0			; d0 = offset into texture
 	movea.l	a0,a3
 	adda.w	d0,a3
-	move.b	(a3),d5			; d5 = texel color
+	move.b	(a3),d3			; d3 = texel color (use D3 to match Ghidra)
 
-	; Check for transparent pixel (index 255)
-	cmp.b	#-1,d5
-	beq.s	.skip_write
+	; Transparency check (matches Ghidra @ 0037480c)
+	cmp.b	d1,d3			; Compare with -1 (transparent)
+	beq.s	.skip_pixel
 
-	; Z-buffer test: only draw if closer
-	cmp.w	(a2),d6
-	ble.s	.skip_write
+	; Z-buffer depth test (matches Ghidra @ 00374810)
+	cmp.w	(a2),d6			; Compare *pz with izi
+	ble.s	.skip_pixel		; Skip if existing pixel is closer
 
-	; Write z-buffer and pixel
-	move.w	d6,(a2)		; Update z-buffer
-	move.b	d5,(a1)			; Write pixel
+	; Write z-buffer and pixel (matches Ghidra @ 00374814-00374816)
+	move.w	d6,(a2)			; Update z-buffer
+	move.b	d3,(a1)			; Write pixel
 
-.skip_write:
+.skip_pixel:
 	; Advance to next pixel
 	add.l	d4,d2			; s += sstep
 	addq.l	#2,a2			; z-buffer++ (word)

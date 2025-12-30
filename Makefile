@@ -116,14 +116,21 @@ SRCS = \
 
 # Assembly source files
 # Using NovaCoder's optimized C2P and span drawing routines from AmiQuake v1.36 binary
-ASMSRCS = \
-	c2p8.s \
-	d_scan_68k.s
+ASM_C2P = c2p8.s
+ASM_SPANS = d_scan_68k.s
 
 # Generate object file lists
 OBJS = $(SRCS:%.c=$(OBJDIR)/%.o)
-ASMOBJS = $(ASMSRCS:%.s=$(OBJDIR)/%.o)
-ALLOBJS = $(OBJS) $(ASMOBJS)
+C2POBJ = $(ASM_C2P:%.s=$(OBJDIR)/%.o)
+
+# Only include span assembly if USE_ASM_SPANS=1
+ifeq ($(findstring USE_ASM_SPANS=1,$(DEFINES)),USE_ASM_SPANS=1)
+SPANOBJ = $(ASM_SPANS:%.s=$(OBJDIR)/%.o)
+else
+SPANOBJ =
+endif
+
+ALLOBJS = $(OBJS) $(C2POBJ) $(SPANOBJ)
 
 # Default target - build both versions
 .PHONY: all fpu nofpu
@@ -157,13 +164,17 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 
 # Assemble .s files (using 68040 for C2P compatibility)
 $(OBJDIR)/%.o: $(SRCDIR)/%.s
-	$(AS) -Fhunk -m68040 -quiet -I$(NDK_INC) -I$(NDK_INC)/lvo -o $@ $<
+	$(AS) -Fhunk -m68040 -phxass -quiet -I$(NDK_INC) -I$(NDK_INC)/lvo -o $@ $<
 
 # Special rule for net_amigaudp.c (needs additional include path)
 $(OBJDIR)/net_amigaudp.o: $(SRCDIR)/net_amigaudp.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 # mathlib.c uses default -O1 flags (no special rule needed)
+
+# Special rule for d_sprite.c (disable optimization to prevent FPU precision issues)
+$(OBJDIR)/d_sprite.o: $(SRCDIR)/d_sprite.c
+	$(CC) $(ARCH_FLAGS) -O0 $(WARN_FLAGS) $(DEFINES) $(INCLUDES) -c -o $@ $<
 
 # Clean
 clean:
