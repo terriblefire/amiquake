@@ -20,6 +20,7 @@ WARN_FLAGS = -Wall -Wno-unused
 DEFINES = -DAMIGA -DFALSE=0 -DTRUE=1 -DUSE_ASM_SPANS=1
 # USE_ASM_SPANS=1: Use optimized 68k assembly for span drawing (d_scan_68k.s)
 # Note: Defining FALSE/TRUE as this GCC SDK doesn't provide them
+# Note: id68k is for SAS/C compiler, we use GCC so keep it undefined
 INCLUDES = -I. -Isrc -ICDPlayerSDK
 
 CFLAGS = $(ARCH_FLAGS) $(OPT_FLAGS) $(WARN_FLAGS) $(DEFINES) $(INCLUDES)
@@ -117,7 +118,8 @@ SRCS = \
 # Assembly source files
 # Using NovaCoder's optimized C2P and span drawing routines from AmiQuake v1.36 binary
 ASM_C2P = c2p8.s
-ASM_SPANS = d_scan_68k.s
+ASM_SPANS_FPU = d_scan_68k.s
+ASM_SPANS_NOFPU = d_scan_68k_nofpu.s fixedpoint_asm.s
 
 # Generate object file lists
 OBJS = $(SRCS:%.c=$(OBJDIR)/%.o)
@@ -125,7 +127,12 @@ C2POBJ = $(ASM_C2P:%.s=$(OBJDIR)/%.o)
 
 # Only include span assembly if USE_ASM_SPANS=1
 ifeq ($(findstring USE_ASM_SPANS=1,$(DEFINES)),USE_ASM_SPANS=1)
-SPANOBJ = $(ASM_SPANS:%.s=$(OBJDIR)/%.o)
+    # Use different assembly based on FPU/non-FPU build
+    ifeq ($(OBJDIR),obj-nofpu)
+        SPANOBJ = $(ASM_SPANS_NOFPU:%.s=$(OBJDIR)/%.o)
+    else
+        SPANOBJ = $(ASM_SPANS_FPU:%.s=$(OBJDIR)/%.o)
+    endif
 else
 SPANOBJ =
 endif
@@ -180,6 +187,8 @@ $(OBJDIR)/d_sprite.o: $(SRCDIR)/d_sprite.c
 clean:
 	rm -rf obj obj-nofpu
 	rm -f build/AmiQuakeGCC build/AmiQuakeGCC-NoFPU
+	rm -f build/test_*
+	rm -f tests/*.o
 
 # Rebuild
 rebuild: clean all
@@ -192,5 +201,6 @@ config:
 	@echo "Flags: $(CFLAGS)"
 	@echo "Source files: $(words $(SRCS))"
 	@echo "Object files: $(words $(OBJS))"
+
 
 .PHONY: all clean rebuild config

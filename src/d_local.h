@@ -76,6 +76,16 @@ void D_DrawZSpans (espan_t *pspans);
 void Turbulent8 (espan_t *pspan);
 void D_SpriteDrawSpans (sspan_t *pspan);
 
+#ifndef id68k
+void D_SetupFixedPointGradients(void);
+
+// Fixed-point gradient variables for non-FPU builds (16.16 format)
+extern int d_zistepu_fp, d_zistepv_fp, d_ziorigin_fp;
+extern int d_sdivzstepu_fp, d_tdivzstepu_fp;
+extern int d_sdivzstepv_fp, d_tdivzstepv_fp;
+extern int d_sdivzorigin_fp, d_tdivzorigin_fp;
+#endif
+
 void D_DrawSkyScans8 (espan_t *pspan);
 void D_DrawSkyScans16 (espan_t *pspan);
 

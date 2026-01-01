@@ -39,6 +39,12 @@ float	d_sdivzorigin, d_tdivzorigin, d_ziorigin;
 
 fixed16_t	sadjust, tadjust, bbextents, bbextentt;
 
+// Fixed-point versions for non-FPU builds (all use 16.16 format)
+int	d_zistepu_fp, d_zistepv_fp, d_ziorigin_fp;
+int	d_sdivzstepu_fp, d_tdivzstepu_fp;
+int	d_sdivzstepv_fp, d_tdivzstepv_fp;
+int	d_sdivzorigin_fp, d_tdivzorigin_fp;
+
 pixel_t			*cacheblock;
 int				cachewidth;
 pixel_t			*d_viewbuffer;

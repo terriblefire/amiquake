@@ -438,6 +438,7 @@ void D_DrawSprite (void)
 	pverts[nump] = pverts[0];
 
 	D_SpriteCalculateGradients ();
+	D_SetupFixedPointGradients();
 	D_SpriteScanLeftEdge ();
 	D_SpriteScanRightEdge ();
 	D_SpriteDrawSpans (sprite_spans);

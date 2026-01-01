@@ -25,6 +25,31 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "r_local.h"
 #include "d_local.h"
 
+#ifndef id68k
+/*
+=============
+D_SetupFixedPointGradients
+
+Convert floating-point gradients to 16.16 fixed-point for non-FPU assembly
+Called after gradients are calculated, before D_DrawSpans
+=============
+*/
+void D_SetupFixedPointGradients(void)
+{
+    // Convert all gradients to 16.16 format with rounding
+    d_zistepu_fp = (int)(d_zistepu * 65536.0 + 0.5);
+    d_zistepv_fp = (int)(d_zistepv * 65536.0 + 0.5);
+    d_ziorigin_fp = (int)(d_ziorigin * 65536.0 + 0.5);
+
+    d_sdivzstepu_fp = (int)(d_sdivzstepu * 65536.0 + 0.5);
+    d_sdivzstepv_fp = (int)(d_sdivzstepv * 65536.0 + 0.5);
+    d_tdivzstepu_fp = (int)(d_tdivzstepu * 65536.0 + 0.5);
+    d_tdivzstepv_fp = (int)(d_tdivzstepv * 65536.0 + 0.5);
+    d_sdivzorigin_fp = (int)(d_sdivzorigin * 65536.0 + 0.5);
+    d_tdivzorigin_fp = (int)(d_tdivzorigin * 65536.0 + 0.5);
+}
+#endif
+
 unsigned char	*r_turb_pbase, *r_turb_pdest;
 fixed16_t		r_turb_s, r_turb_t, r_turb_sstep, r_turb_tstep;
 int				*r_turb_turb;
@@ -92,8 +117,7 @@ void D_WarpScreen (void)
 
 #endif
 
-#if	!id386
-#if !USE_ASM_SPANS
+#if !id386
 
 /*
 =============
@@ -114,7 +138,6 @@ void D_DrawTurbulent8Span (void)
 	} while (--r_turb_spancount > 0);
 }
 
-#endif
 #endif	// !id386
 
 

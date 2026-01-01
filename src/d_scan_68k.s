@@ -8,7 +8,6 @@
 ;
 
 	XDEF	_D_DrawSpans8
-	XDEF	_D_DrawTurbulent8Span
 
 	; External Quake globals (declared in C code)
 	XREF	_d_zistepu
@@ -65,7 +64,10 @@ _D_DrawSpans8:
 	fmovem.x fp2-fp5,-(sp)
 	movem.l	d2-d7/a2-a6,-(sp)
 
-	movea.l	a0,a6			; a6 = pspan pointer
+	; Get parameter from stack (GCC calling convention, not vbcc A0 register)
+	; After prologue: SP -> [saved regs: 92 bytes][return addr: 4][param: 4]
+	; Parameter offset = 92 + 4 + 4 = 100 bytes from current SP
+	movea.l	(100,sp),a6		; a6 = pspan from stack
 
 	; Load and prepare constants
 	fmove.s	(_d_zistepu),fp2	; fp2 = d_zistepu
@@ -274,16 +276,6 @@ _D_DrawSpans8:
 	; Restore and return
 	movem.l	(sp)+,d2-d7/a2-a6
 	fmovem.x (sp)+,fp2-fp5
-	rts
-
-
-;
-; D_DrawTurbulent8Span - Water/lava turbulent texture drawer
-; Uses sine table for wave distortion
-;
-_D_DrawTurbulent8Span:
-	; TODO: Extract from binary @ 0x0037483c
-	; For now, falls through to C implementation
 	rts
 
 	end
