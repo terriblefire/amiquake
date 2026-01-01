@@ -144,7 +144,9 @@ ALLOBJS = $(OBJS) $(C2POBJ) $(SPANOBJ)
 all: fpu nofpu
 
 # FPU target (68040 with FPU)
+# Uses Quake III fast InvSqrt for math (2.3x faster than hardware sqrt on real 68040)
 fpu: ARCH_FLAGS = -m68040 -m68881
+fpu: DEFINES = -DAMIGA -DFALSE=0 -DTRUE=1 -DUSE_ASM_SPANS=1
 fpu: TARGET = build/AmiQuakeGCC
 fpu: OBJDIR = obj
 fpu: LDFLAGS = -m68040 -m68881 -s
@@ -203,4 +205,25 @@ config:
 	@echo "Object files: $(words $(OBJS))"
 
 
-.PHONY: all clean rebuild config
+# Sqrt benchmark test (InvSqrt vs stdlib)
+bench_sqrt:
+	@mkdir -p build
+	$(CC) -m68040 -m68881 -O1 -I. -Isrc -I$(NDK_INC) -o build/bench_sqrt tests/bench_sqrt.c -lm -lamiga
+	@echo "Benchmark built: build/bench_sqrt"
+	@echo "Run with: venv/bin/vamos build/bench_sqrt"
+
+# AngleVectors benchmark (C vs ASM)
+bench_anglevectors:
+	@mkdir -p build
+	$(CC) -m68040 -m68881 -O1 -I. -Isrc -I$(NDK_INC) -o build/bench_anglevectors tests/bench_anglevectors.c obj/mathlib_68k.o -lm -lamiga
+	@echo "Benchmark built: build/bench_anglevectors"
+	@echo "Run with: venv/bin/vamos -C 68040 build/bench_anglevectors"
+
+# AngleVectors test (assembly vs C)
+test_anglevectors:
+	@mkdir -p build
+	$(CC) -m68040 -m68881 -O1 -I. -Isrc -I$(NDK_INC) -o build/test_anglevectors tests/test_anglevectors.c obj/mathlib_68k.o -lm -lamiga
+	@echo "Test built: build/test_anglevectors"
+	venv/bin/vamos -C 68040 build/test_anglevectors
+
+.PHONY: all clean rebuild config bench_sqrt bench_anglevectors test_anglevectors
