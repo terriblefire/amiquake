@@ -620,7 +620,7 @@ void R_GenTurbTile (pixel_t *pbasetex, void *pdest)
 	int		i, j, s, t;
 	byte	*pd;
 	
-	turb = sintable + ((int)(cl.time*SPEED)&(CYCLE-1));
+	turb = r_turb_sintable;
 	pd = (byte *)pdest;
 
 	for (i=0 ; i<TILE_SIZE ; i++)
@@ -646,7 +646,7 @@ void R_GenTurbTile16 (pixel_t *pbasetex, void *pdest)
 	int				i, j, s, t;
 	unsigned short	*pd;
 
-	turb = sintable + ((int)(cl.time*SPEED)&(CYCLE-1));
+	turb = r_turb_sintable;
 	pd = (unsigned short *)pdest;
 
 	for (i=0 ; i<TILE_SIZE ; i++)

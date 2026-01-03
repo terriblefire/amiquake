@@ -265,7 +265,9 @@ void D_DrawSurfaces (void)
 				}
 
 				D_CalcGradients (pface);
-				D_SetupFixedPointGradients();
+	#ifndef USE_FAST_RECIPROCAL
+			D_SetupFixedPointGradients();
+#endif
 				Turbulent8 (s->spans);
 				D_DrawZSpans (s->spans);
 
@@ -312,7 +314,7 @@ void D_DrawSurfaces (void)
 				cachewidth = pcurrentcache->width;
 
 				D_CalcGradients (pface);
-				D_SetupFixedPointGradients();
+			D_SetupFixedPointGradients();
 
 				(*d_drawspans) (s->spans);
 

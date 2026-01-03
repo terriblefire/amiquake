@@ -53,6 +53,10 @@ qboolean		r_nearzionly;
 int		sintable[SIN_BUFFER_SIZE];
 int		intsintable[SIN_BUFFER_SIZE];
 
+// Per-frame cached turbulence table pointers
+int		*r_turb_sintable;
+int		*r_turb_intsintable;
+
 mvertex_t	r_leftenter, r_leftexit;
 mvertex_t	r_rightenter, r_rightexit;
 

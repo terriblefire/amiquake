@@ -372,6 +372,10 @@ void R_SetupFrame (void)
 	vrect_t			vrect;
 	float			w, h;
 
+// calculate turbulence table pointers once per frame
+	r_turb_sintable = sintable + ((int)(cl.time*SPEED)&(CYCLE-1));
+	r_turb_intsintable = intsintable + ((int)(cl.time*SPEED)&(CYCLE-1));
+
 // don't allow cheats in multiplayer
 	if (cl.maxclients > 1)
 	{

@@ -17,8 +17,9 @@ OPT_FLAGS = -O1 -fno-strict-aliasing
 # NOTE: Using -O1 globally due to GCC optimizer bugs (culling, FP math)
 # NOTE: cvar.c contains workaround for AmigaOS sprintf lacking %f support
 WARN_FLAGS = -Wall -Wno-unused
-DEFINES = -DAMIGA -DFALSE=0 -DTRUE=1 -DUSE_ASM_SPANS=1
+DEFINES = -DAMIGA -DFALSE=0 -DTRUE=1 -DUSE_ASM_SPANS=1 -DUSE_FAST_RECIPROCAL=1
 # USE_ASM_SPANS=1: Use optimized 68k assembly for span drawing (d_scan_68k.s)
+# USE_FAST_RECIPROCAL=1: Use fast 1/x approximation in Turbulent8 (saves ~15 cycles per division)
 # Note: Defining FALSE/TRUE as this GCC SDK doesn't provide them
 # Note: id68k is for SAS/C compiler, we use GCC so keep it undefined
 INCLUDES = -I. -Isrc -ICDPlayerSDK
@@ -146,7 +147,7 @@ all: fpu nofpu
 # FPU target (68040 with FPU)
 # Uses Quake III fast InvSqrt for math (2.3x faster than hardware sqrt on real 68040)
 fpu: ARCH_FLAGS = -m68040 -m68881
-fpu: DEFINES = -DAMIGA -DFALSE=0 -DTRUE=1 -DUSE_ASM_SPANS=1
+fpu: DEFINES = -DAMIGA -DFALSE=0 -DTRUE=1 -DUSE_ASM_SPANS=1 -DUSE_FAST_RECIPROCAL=1
 fpu: TARGET = build/AmiQuakeGCC
 fpu: OBJDIR = obj
 fpu: LDFLAGS = -m68040 -m68881 -s

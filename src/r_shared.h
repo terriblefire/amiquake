@@ -57,6 +57,10 @@ extern cvar_t	r_clearcolor;
 extern int	sintable[SIN_BUFFER_SIZE];
 extern int	intsintable[SIN_BUFFER_SIZE];
 
+// Per-frame cached turbulence table pointers (calculated from cl.time)
+extern int	*r_turb_sintable;
+extern int	*r_turb_intsintable;
+
 extern	vec3_t	vup, base_vup;
 extern	vec3_t	vpn, base_vpn;
 extern	vec3_t	vright, base_vright;
