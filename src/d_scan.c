@@ -136,7 +136,7 @@ void D_WarpScreen (void)
 
 #endif
 
-#if !id386
+#if !id386 && !USE_ASM_SPANS
 
 /*
 =============
@@ -157,7 +157,7 @@ void D_DrawTurbulent8Span (void)
 	} while (--r_turb_spancount > 0);
 }
 
-#endif	// !id386
+#endif	// !id386 && !USE_ASM_SPANS
 
 
 #if !id68k

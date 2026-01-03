@@ -278,4 +278,87 @@ _D_DrawSpans8:
 	fmovem.x (sp)+,fp2-fp5
 	rts
 
+;
+; D_DrawTurbulent8Span - Turbulent water pixel loop (inner hot path)
+; Processes r_turb_spancount pixels with sine-table distortion
+;
+; C equivalent:
+;   sturb = ((r_turb_s + r_turb_turb[(r_turb_t>>16)&127])>>16)&63;
+;   tturb = ((r_turb_t + r_turb_turb[(r_turb_s>>16)&127])>>16)&63;
+;   *r_turb_pdest++ = *(r_turb_pbase + (tturb<<6) + sturb);
+;   r_turb_s += r_turb_sstep; r_turb_t += r_turb_tstep;
+;
+	XDEF	_D_DrawTurbulent8Span
+
+	; External turbulence globals (set by Turbulent8)
+	XREF	_r_turb_pbase
+	XREF	_r_turb_pdest
+	XREF	_r_turb_s
+	XREF	_r_turb_t
+	XREF	_r_turb_sstep
+	XREF	_r_turb_tstep
+	XREF	_r_turb_turb
+	XREF	_r_turb_spancount
+
+_D_DrawTurbulent8Span:
+	movem.l	d2-d7/a2-a3,-(sp)
+
+	; Load globals into registers (minimize memory access)
+	move.l	(_r_turb_s),d2		; d2 = r_turb_s (16.16 fixed)
+	move.l	(_r_turb_t),d3		; d3 = r_turb_t (16.16 fixed)
+	move.l	(_r_turb_sstep),d4	; d4 = r_turb_sstep
+	move.l	(_r_turb_tstep),d5	; d5 = r_turb_tstep
+	move.l	(_r_turb_spancount),d7	; d7 = loop counter
+	movea.l	(_r_turb_pbase),a0	; a0 = texture base
+	movea.l	(_r_turb_pdest),a1	; a1 = dest framebuffer
+	movea.l	(_r_turb_turb),a2	; a2 = sine table pointer
+
+	; Pre-calculate constants
+	moveq	#127,d6			; d6 = CYCLE-1 mask (128-1)
+
+.turb_pixel_loop:
+	; sturb = ((r_turb_s + r_turb_turb[(r_turb_t>>16)&127])>>16)&63
+	move.l	d3,d0			; d0 = r_turb_t
+	swap	d0			; d0 = r_turb_t >> 16
+	and.l	d6,d0			; d0 = (r_turb_t>>16) & 127
+	lsl.l	#2,d0			; d0 *= 4 (int array)
+	move.l	(a2,d0.l),d0		; d0 = r_turb_turb[index]
+	add.l	d2,d0			; d0 = r_turb_s + turb
+	swap	d0			; d0 = (r_turb_s + turb) >> 16
+	and.w	#63,d0			; d0 = sturb (0-63)
+
+	; tturb = ((r_turb_t + r_turb_turb[(r_turb_s>>16)&127])>>16)&63
+	move.l	d2,d1			; d1 = r_turb_s
+	swap	d1			; d1 = r_turb_s >> 16
+	and.l	d6,d1			; d1 = (r_turb_s>>16) & 127
+	lsl.l	#2,d1			; d1 *= 4 (int array)
+	move.l	(a2,d1.l),d1		; d1 = r_turb_turb[index]
+	add.l	d3,d1			; d1 = r_turb_t + turb
+	swap	d1			; d1 = (r_turb_t + turb) >> 16
+	and.w	#63,d1			; d1 = tturb (0-63)
+
+	; Calculate texture offset: tturb*64 + sturb
+	lsl.w	#6,d1			; d1 = tturb << 6
+	add.w	d0,d1			; d1 = (tturb<<6) + sturb
+
+	; Fetch texel and write
+	move.b	(a0,d1.w),d0		; d0 = texture[offset]
+	move.b	d0,(a1)+		; *r_turb_pdest++ = texel
+
+	; Update coordinates
+	add.l	d4,d2			; r_turb_s += r_turb_sstep
+	add.l	d5,d3			; r_turb_t += r_turb_tstep
+
+	; Loop control
+	subq.l	#1,d7			; --r_turb_spancount
+	bgt.s	.turb_pixel_loop
+
+	; Write back updated globals
+	move.l	d2,(_r_turb_s)
+	move.l	d3,(_r_turb_t)
+	move.l	a1,(_r_turb_pdest)
+
+	movem.l	(sp)+,d2-d7/a2-a3
+	rts
+
 	end
